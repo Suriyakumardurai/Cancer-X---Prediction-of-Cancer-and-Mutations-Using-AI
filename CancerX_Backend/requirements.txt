@@ -2,3 +2,4 @@
 PyMuPDF 
 pillow
 python-docx
+pydantic
