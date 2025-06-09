@@ -1,0 +1,22 @@
+File Handling: 
+
+JS Should handle the Files(Multiple Types) and Return them as Payload below 
+
+{
+  "patient": "John Doe",
+  "files": [
+    {
+      "filename": "scan.jpg",
+      "content_type": "image/jpeg",
+      "content": "base64_encoded_data_here"
+    },
+    {
+      "filename": "report.pdf",
+      "content_type": "application/pdf",
+      "content": "base64_encoded_data_here"
+    }
+  ],
+  "details": "The Details of the patient which they told while uploading file"
+}
+
+
