@@ -1,71 +1,69 @@
-# CancerX — Prediction of Cancer and Mutations Using AI 🧬🤖
+<h1 align="center">🧬 CancerX — AI-Powered Cancer & Mutation Prediction 🤖</h1>
 
-> A research prototype and interactive web application for multimodal cancer prediction using artificial intelligence.
-
-## 🌐 Live Webpage
-
-Explore the interactive summary and visualization:
-👉 [CancerX Web Interface](https://suriyakumardurai.github.io/Cancer-X---Prediction-of-Cancer-and-Mutations-Using-AI/#core-idea)
-
-## 📄 Project Documentation
-
-Full documentation, methodology, and design strategy:  
-📖 [View Google Docs](https://docs.google.com/document/d/1v6sjWvtHvVaqelV_JbINa5T1YEhAb-ob6jtIirB8FGo/edit?usp=sharing)
+<p align="center">
+  <strong>A multimodal AI research prototype exploring the future of predictive oncology.</strong><br>
+  <em>Integrating imaging, pathology, clinical text, and omics data for powerful cancer insights.</em>
+</p>
 
 ---
 
-## 🚀 About CancerX
+## 🌐 Live Demo & Documentation
 
-**CancerX** is a conceptual vision for building a next-generation multimodal AI system that revolutionizes cancer diagnosis and mutation prediction. It integrates data from:
+<div align="center">
 
-- 🩺 **Radiological Imaging** (MRI, CT, PET)
-- 🔬 **Digital Histopathology** (Whole Slide Images)
-- 📝 **Clinical Text Reports**
-- 🧬 **Multi-Omics** (Genomics, Transcriptomics)
+🔗 **[Launch Interactive Webpage](https://suriyakumardurai.github.io/Cancer-X---Prediction-of-Cancer-and-Mutations-Using-AI/)**  
+📖 **[View Full Documentation (Google Doc)](https://docs.google.com/document/d/1v6sjWvtHvVaqelV_JbINa5T1YEhAb-ob6jtIirB8FGo/edit?usp=sharing)**
 
-By combining these data streams, CancerX aims to:
-- Emulate real-world clinical reasoning
-- Improve robustness and generalizability
-- Enhance predictive accuracy and insight
+</div>
 
 ---
 
-## 🧠 Core Highlights
+## 🚀 Project Overview
 
-- **Multimodal Fusion** strategies (early, intermediate, late)
-- **Transformer-based Vision Models** (ViTs) and NLP models
-- **Interactive Performance Benchmarks**
-- A clear **roadmap for publication & clinical translation**
+> **CancerX** is a research-driven prototype that envisions a next-generation **AI system** for predicting cancer and mutations using **multimodal medical data**. It mirrors how expert clinicians synthesize various test results to make robust, data-informed decisions.
+
+### 🔬 What We Integrate:
+- 🩺 **Radiological Imaging** — MRI, CT, PET scans
+- 🔬 **Histopathology Slides** — WSIs for cellular analysis
+- 📝 **Clinical Text Reports** — Pathology & radiology notes
+- 🧬 **Multi-Omics Data** — Genomics, transcriptomics, etc.
 
 ---
 
-## 🗂 Repository Structure
+## 🧠 Why Multimodal AI?
+
+> “No single test tells the whole story. AI shouldn't be any different.”
+
+### ✨ Core Highlights:
+- 🧩 **Multimodal Fusion Strategies**: Early, Intermediate (SoTA), Late
+- 🔎 **Transformer-Based Models**: ViTs, CNNs, BERT, and beyond
+- 📊 **Interactive Performance Dashboards**: Explore SOTA metrics
+- 🧭 **Roadmap to Clinical Translation**: Generalizable, robust AI
+
+---
+
+## 📌 Goals & Research Vision
+
+| Goal | Description |
+|------|-------------|
+| 🎯 **Frontier Use Case** | Predictive radiogenomics using **longitudinal multimodal data** |
+| 🧠 **Novel Architecture** | Develop a **ViT-GNN fusion** or adapt SoTA (e.g., HEALNet) |
+| 🧪 **Robust Validation** | External, multi-center datasets & missing modality tolerance |
+
+---
+
+## 🗂 Repo Structure
 
 | Branch     | Purpose                                    |
 |------------|--------------------------------------------|
-| `main`     | Codebase, documentation, and research files |
-| `webpage`  | Static hosted site (HTML/CSS/JS via GitHub Pages) |
+| `main`     | Codebase, documentation, experimental logic |
+| `webpage`  | Static site (HTML/CSS/JS) hosted via GitHub Pages |
 
 ---
 
-## 📌 Goals and Roadmap
+## 🖼️ Screenshots (Optional)
 
-1. **Target a Frontier Use Case**: Predictive radiogenomics using longitudinal data
-2. **Build a Novel Architecture**: Potential ViT-GNN hybrid fusion models
-3. **Validate Robustly**: External, multi-center datasets and real-world imperfection handling
+> _You can add GIFs or images here by uploading to the repo and linking them below:_
 
----
-
-## ⚖️ License & Disclaimer
-
-This project is for academic and educational use only.  
-It does **not** provide clinical advice or diagnostic services.
-
-© 2025 CancerX Project.
-
----
-
-## 🙋‍♂️ Author
-
-**Suriyakumar Durai**  
-Open to feedback, collaboration, and contributions! Feel free to connect or raise issues.
+```md
+![CancerX Screenshot](assets/demo.png)
