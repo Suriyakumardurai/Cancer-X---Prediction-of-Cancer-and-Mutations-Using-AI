@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CancerX - Predictive Analysis of Cancer and Health</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: A multi-section, tab-based dashboard layout is used to deconstruct the dense report into thematic, digestible parts. This non-linear structure prioritizes user-led exploration over the original report's linear flow. Key sections (Core Idea, Data, Technology, Benchmarks, Roadmap) are accessible via a sticky navigation bar. This design choice makes the complex information more approachable for a wider audience, allowing users to focus on areas of interest, with the interactive benchmark chart serving as the central point for data exploration. -->
+    <!-- Visualization & Content Choices: Report data is presented using a mix of interactive elements to match different goals. Goal: Compare -> Bar charts (Chart.js) show quantitative performance differences (e.g., unimodal vs. multimodal AUC). Goal: Organize -> Grid layouts and tabbed interfaces (HTML/Tailwind) structure complex topics like data modalities and AI architectures. Goal: Explore -> An interactive dashboard with dropdown filters allows users to dynamically query and visualize performance benchmarks from Table 2. Goal: Inform -> Structured HTML/CSS diagrams explain concepts like fusion strategies. This approach ensures all key information is presented in the most effective, engaging, and understandable format. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f7f4; /* Warm neutral background */
+            color: #44403c; /* stone-700 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 45vh;
+            max-height: 500px;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+            padding-bottom: 4px;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #0d9488; /* teal-600 */
+            transition: width 0.3s ease;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #134e4a; /* teal-900 */
+        }
+        .nav-link.active::after, .nav-link:hover::after {
+            width: 100%;
+        }
+        .section-card {
+            background-color: #ffffff;
+            border: 1px solid #e7e5e4; /* stone-200 */
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+            box-shadow: 0 4px 14px 0 rgb(13 148 136 / 30%);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm border-b border-stone-200">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-teal-800">CancerX</h1>
+            <div class="hidden md:flex items-center space-x-8 text-stone-600 font-medium">
+                <a href="#core-idea" class="nav-link">The Core Idea</a>
+                <a href="#data-modalities" class="nav-link">Data Modalities</a>
+                <a href="#technology" class="nav-link">Technology</a>
+                <a href="#benchmarks" class="nav-link">Benchmarks</a>
+                <a href="#roadmap" class="nav-link">Roadmap</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero" class="py-20 md:py-32 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-4xl md:text-6xl font-bold text-stone-800 leading-tight">Predictive Analysis of Cancer and Health</h2>
+                <p class="mt-6 text-lg md:text-xl text-stone-600 max-w-3xl mx-auto">An interactive exploration of the CancerX project, a vision for a next-generation predictive system using multimodal AI to revolutionize oncology.</p>
+                <a href="#core-idea" class="mt-10 inline-block bg-teal-600 text-white font-bold py-3 px-8 rounded-full hover:bg-teal-700 transition-transform transform hover:scale-105">Explore the Research</a>
+            </div>
+        </section>
+
+        <section id="core-idea" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold text-stone-800">The Multimodal Imperative</h3>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">This application explores the foundational argument of the CancerX report: a multimodal approach is not just an improvement but a necessity for modern precision oncology. By integrating diverse data, AI can create a holistic disease profile, far surpassing the limitations of any single data source.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 items-start">
+                    <div class="section-card">
+                        <h4 class="text-2xl font-semibold text-stone-700 mb-4">Unimodal vs. Multimodal</h4>
+                        <p class="text-stone-600 mb-6">The literature is clear: models that fuse multiple data types (like images and text) consistently outperform those relying on a single source. This fusion allows the model to build a more complete, robust, and accurate picture of a tumor's biology.</p>
+                        <div class="chart-container h-64 max-h-[300px]">
+                            <canvas id="unimodalVsMultimodalChart"></canvas>
+                        </div>
+                         <p class="text-xs text-center mt-2 text-stone-500">Source: 2025 systematic review on pCR prediction in breast cancer.</p>
+                    </div>
+                    <div class="section-card">
+                        <h4 class="text-2xl font-semibold text-stone-700 mb-4">Emulating Clinical Expertise</h4>
+                        <p class="text-stone-600 mb-6">A multimodal system mirrors how expert clinicians work. A doctor doesn't rely on just one test; they synthesize information from patient history, lab results, and multiple scans. AI that does the same achieves greater robustness and generalizability, making predictions more reliable in the face of real-world data imperfections.</p>
+                        <div class="p-6 bg-teal-50/50 border border-teal-200 rounded-lg">
+                            <div class="flex items-center space-x-4">
+                                <span class="text-4xl">🔬</span>
+                                <span class="text-2xl font-light text-teal-400">+</span>
+                                <span class="text-4xl">📄</span>
+                                <span class="text-2xl font-light text-teal-400">+</span>
+                                <span class="text-4xl">🧬</span>
+                                <span class="text-2xl font-light text-teal-400">=</span>
+                                <div class="text-center">
+                                    <span class="text-2xl font-bold text-teal-700">Holistic View</span>
+                                    <p class="text-sm text-teal-600">Enhanced Prediction</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-stone-600">This integration links genotype to phenotype, providing a richer understanding than any single modality could achieve alone.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="data-modalities" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold text-stone-800">The Pillars of Prediction: Data Modalities</h3>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">The power of CancerX comes from integrating diverse, complementary data sources. Each modality provides a unique window into the tumor's biology. Explore the key data types that form the foundation of this multimodal approach.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="section-card text-center">
+                        <span class="text-5xl mb-4 block">🩺</span>
+                        <h4 class="text-xl font-semibold text-stone-700">Radiological Imaging</h4>
+                        <p class="mt-2 text-stone-600">Non-invasive views (MRI, CT, PET) that capture a tumor's size, shape, and location, forming the basis of radiomics.</p>
+                    </div>
+                    <div class="section-card text-center">
+                        <span class="text-5xl mb-4 block">🔬</span>
+                        <h4 class="text-xl font-semibold text-stone-700">Digital Histopathology</h4>
+                        <p class="mt-2 text-stone-600">High-resolution scans of tissue samples (WSIs) that reveal cellular architecture, the gold standard for diagnosis.</p>
+                    </div>
+                    <div class="section-card text-center">
+                        <span class="text-5xl mb-4 block">📝</span>
+                        <h4 class="text-xl font-semibold text-stone-700">Unstructured Clinical Text</h4>
+                        <p class="mt-2 text-stone-600">Rich narratives from pathology/radiology reports containing critical diagnostic details, staging, and biomarker status.</p>
+                    </div>
+                    <div class="section-card text-center">
+                        <span class="text-5xl mb-4 block">🧬</span>
+                        <h4 class="text-xl font-semibold text-stone-700">Multi-Omics Data</h4>
+                        <p class="mt-2 text-stone-600">Deep molecular data (genomics, transcriptomics) that identifies the specific genetic drivers of a cancer.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="technology" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold text-stone-800">The Engine: AI Architectures & Fusion</h3>
+                     <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">This section explores the core technologies powering CancerX. We'll look at the evolution of AI models used for analyzing medical data and the critical techniques for fusing these different information streams into a single, powerful prediction.</p>
+                </div>
+
+                <div class="section-card mb-8">
+                    <h4 class="text-2xl font-semibold text-stone-700 mb-6 text-center">Foundational AI Models</h4>
+                    <div id="model-tabs" class="mb-6 flex flex-wrap justify-center gap-2 md:gap-4">
+                        <button data-tab="vision" class="tab-button px-4 py-2 rounded-full font-medium text-sm md:text-base bg-stone-100 text-stone-700 active">Vision Models</button>
+                        <button data-tab="nlp" class="tab-button px-4 py-2 rounded-full font-medium text-sm md:text-base bg-stone-100 text-stone-700">Language Models</button>
+                        <button data-tab="advanced" class="tab-button px-4 py-2 rounded-full font-medium text-sm md:text-base bg-stone-100 text-stone-700">Advanced Architectures</button>
+                    </div>
+                    <div id="model-content" class="p-4 md:p-6 bg-stone-50 rounded-lg border border-stone-200 min-h-[200px]">
+                        <div id="vision-content" class="model-panel">
+                            <h5 class="font-bold text-lg text-teal-800">From CNNs to Vision Transformers (ViTs)</h5>
+                            <p class="mt-2 text-stone-600">The field has evolved from Convolutional Neural Networks (CNNs), which are excellent at detecting local patterns, to Vision Transformers (ViTs). ViTs analyze an image globally, capturing long-range dependencies between different regions. This is crucial for understanding the complex, heterogeneous landscape of a tumor, mirroring how a pathologist assesses overall tissue architecture.</p>
+                        </div>
+                        <div id="nlp-content" class="model-panel hidden">
+                            <h5 class="font-bold text-lg text-teal-800">Unlocking Clinical Text with Transformers</h5>
+                            <p class="mt-2 text-stone-600">A wealth of critical data is locked in free-text reports. Transformer-based models like BERT and GPT are revolutionary for this task. They automate Information Extraction—identifying key entities like TNM staging and biomarkers—with high accuracy, often matching human experts without any specific retraining (zero-shot extraction).</p>
+                        </div>
+                        <div id="advanced-content" class="model-panel hidden">
+                           <h5 class="font-bold text-lg text-teal-800">Specialized Models for Biomedical Data</h5>
+                            <p class="mt-2 text-stone-600">Beyond the basics, specialized architectures excel at specific tasks. <strong>Graph Neural Networks (GNNs)</strong> are ideal for modeling relationships, like gene interactions in biological pathways. <strong>State-Space Models (e.g., Mamba)</strong> are highly efficient at processing very long data sequences, such as the pixels in a high-resolution pathology slide, outperforming other models in certain tasks.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <h4 class="text-2xl font-semibold text-stone-700 mb-6 text-center">The Art of Fusion: Combining Data Streams</h4>
+                    <p class="text-center text-stone-600 mb-8 max-w-2xl mx-auto">The most critical technical challenge is how to combine, or "fuse," the different data types. The strategy chosen dramatically impacts performance.</p>
+                    <div class="flex flex-col md:flex-row justify-around items-center gap-4">
+                        <div class="text-center p-4">
+                            <h5 class="font-semibold text-lg">Early Fusion</h5>
+                            <p class="text-sm text-stone-500">Combine at input</p>
+                            <div class="mt-2 p-2 border-2 border-dashed border-sky-300 rounded-lg">
+                                <span class="text-2xl">🔬</span> + <span class="text-2xl">📝</span> → <span class="font-bold text-sky-600">Model</span>
+                            </div>
+                        </div>
+                        <div class="text-center p-4 border-4 border-teal-500 rounded-xl shadow-lg">
+                            <h5 class="font-semibold text-lg text-teal-700">Intermediate Fusion</h5>
+                            <p class="text-sm text-stone-500">(Most Effective)</p>
+                             <div class="mt-2 p-2">
+                                <span class="text-2xl">🔬</span>→<span class="font-bold text-teal-600">Enc</span> + <span class="text-2xl">📝</span>→<span class="font-bold text-teal-600">Enc</span> → <span class="font-bold text-teal-600">Fuse</span>
+                            </div>
+                        </div>
+                        <div class="text-center p-4">
+                            <h5 class="font-semibold text-lg">Late Fusion</h5>
+                            <p class="text-sm text-stone-500">Combine at output</p>
+                            <div class="mt-2 p-2 border-2 border-dashed border-amber-400 rounded-lg">
+                                <span class="font-bold text-amber-600">Model</span> + <span class="font-bold text-amber-600">Model</span> → <span class="text-2xl">Vote</span>
+                            </div>
+                        </div>
+                    </div>
+                     <p class="text-center text-stone-600 mt-8 max-w-3xl mx-auto">While Early and Late fusion have their uses, <strong>Intermediate Fusion</strong> is the state-of-the-art. It allows for deep, modality-specific learning before fusing rich feature representations, enabling the model to learn complex interactions and achieve the best performance.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="benchmarks" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold text-stone-800">Interactive Performance Benchmarks</h3>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">How well do these models actually perform? This interactive dashboard visualizes the state-of-the-art performance metrics reported in the literature (2022-2024). Use the filters to explore the data for different predictive tasks and evaluation metrics.</p>
+                </div>
+
+                <div class="section-card">
+                    <div class="flex flex-col md:flex-row gap-4 mb-6 p-4 bg-stone-50 rounded-lg border border-stone-200">
+                        <div class="flex-1">
+                            <label for="taskFilter" class="block text-sm font-medium text-stone-700">Predictive Task</label>
+                            <select id="taskFilter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-stone-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
+                                <option value="Treatment Response (pCR)">Treatment Response (pCR)</option>
+                                <option value="Survival Prediction">Survival Prediction</option>
+                                <option value="Cancer Staging">Cancer Staging</option>
+                                <option value="Gene Mutation">Gene Mutation</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label for="metricFilter" class="block text-sm font-medium text-stone-700">Performance Metric</label>
+                            <select id="metricFilter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-stone-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <h4 id="chartTitle" class="text-xl font-semibold text-stone-700 mb-4 text-center"></h4>
+                    <div class="chart-container">
+                        <canvas id="benchmarkChart"></canvas>
+                    </div>
+                    <p id="chartContext" class="text-sm text-center mt-4 text-stone-500"></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="roadmap" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold text-stone-800">Roadmap to Impact</h3>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">Translating this research into a high-impact IEEE publication requires a clear strategy. The goal is to move beyond simply using multimodal data to tackling a frontier problem with a novel, robust, and generalizable solution.</p>
+                </div>
+
+                <div class="relative">
+                    <div class="hidden md:block absolute left-1/2 -translate-x-1/2 top-0 h-full w-0.5 bg-teal-200"></div>
+                    <div class="space-y-12">
+                        <div class="md:grid md:grid-cols-2 md:gap-8 items-center relative">
+                            <div class="md:text-right md:pr-8 mb-4 md:mb-0">
+                                <h4 class="text-2xl font-bold text-teal-700">1. Tackle a Frontier Problem</h4>
+                            </div>
+                            <div class="md:pl-8">
+                                <div class="section-card">
+                                    <p class="text-stone-600">The most promising angle for novelty is to focus on <strong>predictive radiogenomics using longitudinal data</strong>. This means forecasting future cancer progression and mutation risk over time, a clear gap in the current literature with immense clinical potential.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:grid md:grid-cols-2 md:gap-8 items-center relative">
+                            <div class="md:pl-8 md:col-start-2">
+                                <h4 class="text-2xl font-bold text-teal-700 md:text-left">2. Innovate in Architecture</h4>
+                            </div>
+                            <div class="md:text-right md:pr-8 md:row-start-1">
+                                <div class="section-card">
+                                    <p class="text-stone-600">Propose a novel fusion architecture specifically for image and text data. This could be a hybrid model (e.g., ViT-GNN) or an adaptation of a state-of-the-art method like HEALNet, demonstrating superior performance and robustness.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:grid md:grid-cols-2 md:gap-8 items-center relative">
+                           <div class="md:text-right md:pr-8 mb-4 md:mb-0">
+                                <h4 class="text-2xl font-bold text-teal-700">3. Ensure Robust Validation</h4>
+                            </div>
+                            <div class="md:pl-8">
+                                <div class="section-card">
+                                    <p class="text-stone-600">The primary contribution could be addressing clinical translation. This involves designing a system robust to real-world data issues (like missing modalities) and, crucially, validating it on an <strong>external, multi-center dataset</strong> to prove generalizability.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t border-stone-200">
+        <div class="container mx-auto px-6 py-8 text-center text-stone-500">
+            <p>&copy; 2025 CancerX Project. An interactive summary based on the literature review.</p>
+            <p class="text-sm mt-2">This application is for informational purposes only and does not constitute medical advice.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const benchmarkData = {
+                'Treatment Response (pCR)': {
+                    'AUC': [
+                        { label: 'CNN-based (MRI+Clinical)', value: 0.88, context: 'Median AUC from a 2025 systematic review of 51 studies.' },
+                        { label: 'CNN/LSTM (Longitudinal MRI)', value: 0.91, context: 'Median AUC when using scans from multiple time points, showing the value of longitudinal data.' },
+                        { label: 'Vision-Mamba (Pre-treatment CT)', value: 0.92, context: 'A newer architecture outperforming baselines on esophageal cancer data.' }
+                    ]
+                },
+                'Survival Prediction': {
+                    'C-Index': [
+                        { label: 'HEALNet (WSI+Omics)', value: 0.812, context: 'State-of-the-art fusion on TCGA kidney cancer cohort.' }
+                    ],
+                    'Hazard Ratio': [
+                        { label: 'PathGNN (Radiology+Pathology)', value: 3.314, context: 'GNN model for glioma, indicating strong separation of risk groups.' }
+                    ]
+                },
+                'Cancer Staging': {
+                    'AUC': [
+                        { label: 'Neural Network (Multi-omics)', value: 0.93, context: 'Predicting early vs. late stage in papillary renal cell carcinoma.' }
+                    ]
+                },
+                'Gene Mutation': {
+                    'AUC': [
+                        { label: 'Random Forest (MRI+Clinical)', value: 0.91, context: 'Predicting FOXA1 mutations in prostate cancer.' }
+                    ],
+                    'Sensitivity': [
+                        { label: 'CNN (WSI for ALK)', value: 0.80, context: 'Predicting ALK mutation in non-small cell lung cancer (NSCLC) from pathology slides.' },
+                        { label: 'CNN (WSI for EGFR)', value: 0.78, context: 'Predicting EGFR mutation in NSCLC from pathology slides.' }
+                    ],
+                    'Specificity': [
+                        { label: 'CNN (WSI for ALK)', value: 0.85, context: 'Predicting ALK mutation in NSCLC from pathology slides.' },
+                        { label: 'CNN (WSI for EGFR)', value: 0.74, context: 'Predicting EGFR mutation in NSCLC from pathology slides.' }
+                    ]
+                }
+            };
+
+            const taskFilter = document.getElementById('taskFilter');
+            const metricFilter = document.getElementById('metricFilter');
+            const chartTitle = document.getElementById('chartTitle');
+            const chartContextEl = document.getElementById('chartContext');
+            let benchmarkChart;
+
+            function populateMetricFilter(task) {
+                const metrics = Object.keys(benchmarkData[task]);
+                metricFilter.innerHTML = '';
+                metrics.forEach(metric => {
+                    const option = document.createElement('option');
+                    option.value = metric;
+                    option.textContent = metric;
+                    metricFilter.appendChild(option);
+                });
+            }
+
+            function updateChart() {
+                const selectedTask = taskFilter.value;
+                const selectedMetric = metricFilter.value;
+
+                if (!benchmarkData[selectedTask] || !benchmarkData[selectedTask][selectedMetric]) {
+                    if (benchmarkChart) benchmarkChart.destroy();
+                    chartTitle.textContent = 'No data available for this selection.';
+                    return;
+                }
+
+                const data = benchmarkData[selectedTask][selectedMetric];
+                const labels = data.map(d => d.label.split(' ').map(word => word.length > 15 ? word.substring(0, 15) + '...' : word).join(' '));
+                const values = data.map(d => d.value);
+
+                chartTitle.textContent = `Performance for: ${selectedTask}`;
+                chartContextEl.textContent = `Metric: ${selectedMetric}. Hover over bars for details on each model.`;
+
+                const chartConfig = {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: selectedMetric,
+                            data: values,
+                            backgroundColor: 'rgba(13, 148, 136, 0.6)',
+                            borderColor: 'rgba(13, 148, 136, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#e7e5e4' // stone-200
+                                },
+                                ticks: {
+                                    color: '#57534e' // stone-600
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#57534e', // stone-600
+                                    autoSkip: false,
+                                     callback: function(value, index, values) {
+                                        const label = this.getLabelForValue(value);
+                                        if (label.length > 20) {
+                                            return label.match(/.{1,20}/g);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    afterBody: function(context) {
+                                        const dataIndex = context[0].dataIndex;
+                                        const itemContext = benchmarkData[selectedTask][selectedMetric][dataIndex].context;
+                                        return itemContext.match(/.{1,40}/g) || '';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+
+                if (benchmarkChart) {
+                    benchmarkChart.destroy();
+                }
+                benchmarkChart = new Chart(document.getElementById('benchmarkChart'), chartConfig);
+            }
+
+            taskFilter.addEventListener('change', () => {
+                populateMetricFilter(taskFilter.value);
+                updateChart();
+            });
+
+            metricFilter.addEventListener('change', updateChart);
+
+            populateMetricFilter(taskFilter.value);
+            updateChart();
+
+            const unimodalVsMultimodalCtx = document.getElementById('unimodalVsMultimodalChart').getContext('2d');
+            new Chart(unimodalVsMultimodalCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Unimodal Models', 'Multimodal Models'],
+                    datasets: [{
+                        label: 'Median AUC',
+                        data: [0.83, 0.88],
+                        backgroundColor: ['rgba(251, 146, 60, 0.6)', 'rgba(20, 184, 166, 0.6)'],
+                        borderColor: ['rgba(251, 146, 60, 1)', 'rgba(20, 184, 166, 1)'],
+                        borderWidth: 1,
+                        borderRadius: 5,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1.0,
+                            title: { display: true, text: 'Median AUC Score' }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Multimodal Performance Gain',
+                            font: { size: 16 }
+                        },
+                        legend: { display: false }
+                    }
+                }
+            });
+            
+            const tabs = document.querySelectorAll('.tab-button');
+            const panels = document.querySelectorAll('.model-panel');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const target = tab.getAttribute('data-tab');
+                    panels.forEach(panel => {
+                        if (panel.id === `${target}-content`) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+            sections.forEach(section => observer.observe(section));
+        });
+    </script>
+</body>
+</html>
