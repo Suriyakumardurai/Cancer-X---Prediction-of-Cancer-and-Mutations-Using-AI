@@ -1,5 +1,0 @@
-#Requirement file 
-PyMuPDF 
-pillow
-python-docx
-pydantic
