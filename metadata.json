@@ -1,0 +1,5 @@
+{
+  "name": "CancerX",
+  "description": "A state-of-the-art platform that assists oncologists by providing a unified analysis of patient data from text reports and medical scans, highlighting potential malignancies and key biomarkers to accelerate and improve diagnostic accuracy.",
+  "requestFramePermissions": []
+}

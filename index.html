@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CancerX | Predictive Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg-color: #f8f7f4;
+        --surface-color: #ffffff;
+        --text-color: #44403c;
+        --text-muted-color: #57534e;
+        --accent-color: #0d9488;
+        --accent-color-dark: #134e4a;
+        --accent-color-light: #f0fdfa;
+        --border-color: #e7e5e4;
+        --scrollbar-track-color: #f1f1f1;
+        --scrollbar-thumb-color: #d1d5db;
+        --scrollbar-thumb-hover-color: #9ca3af;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+      }
+      .light-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      .light-scrollbar::-webkit-scrollbar-track {
+        background: var(--scrollbar-track-color);
+        border-radius: 4px;
+      }
+      .light-scrollbar::-webkit-scrollbar-thumb {
+        background-color: var(--scrollbar-thumb-color);
+        border-radius: 4px;
+      }
+      .light-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hover-color);
+      }
+      .section-card {
+        background-color: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      }
+      .prose { color: var(--text-color); }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "chart.js": "https://aistudiocdn.com/chart.js@^4.5.0"
+  }
+}
+</script>
+</head>
+  <body class="antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
