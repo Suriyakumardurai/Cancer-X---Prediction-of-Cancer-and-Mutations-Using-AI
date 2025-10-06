@@ -66,6 +66,7 @@ const App: React.FC = () => {
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
   const [activeFileId, setActiveFileId] = useState<string>('welcome');
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
+  const [fileQueue, setFileQueue] = useState<File[]>([]);
   
   const activeCase = cases.find(c => c.id === activeCaseId);
 
@@ -105,12 +106,14 @@ const App: React.FC = () => {
   }, [cases]);
 
   const updateActiveCase = useCallback((updater: (currentCase: Case) => Case) => {
-    const newCases = cases.map(c => 
+    setCases(currentCases => {
+      const newCases = currentCases.map(c =>
         c.id === activeCaseId ? updater(c) : c
-    );
-    saveCasesToStorage(newCases);
-    setCases(newCases);
-  }, [activeCaseId, cases]);
+      );
+      saveCasesToStorage(newCases);
+      return newCases;
+    });
+  }, [activeCaseId]);
 
   const handleDeleteCase = (idToDelete: string) => {
     // This is a direct, imperative implementation to guarantee deletion.
@@ -131,12 +134,14 @@ const App: React.FC = () => {
   };
   
   const handleSelectCase = (id: string) => {
+    setFileQueue([]); // Cancel any pending uploads when switching cases
     setActiveCaseId(id);
     setActiveFileId('welcome');
     setView('dashboard');
   };
   
   const handleShowHub = () => {
+    setFileQueue([]); // Cancel any pending uploads when going to hub
     setActiveCaseId(null);
     setActiveFileId('welcome');
     setView('hub');
@@ -192,6 +197,14 @@ const App: React.FC = () => {
     }
   }, [activeCaseId, updateActiveCase]);
 
+  // This effect handles processing the file queue once an active case is available.
+  useEffect(() => {
+    if (activeCaseId && fileQueue.length > 0) {
+      fileQueue.forEach(processFile);
+      setFileQueue([]); // Clear queue after starting the processing
+    }
+  }, [activeCaseId, fileQueue, processFile]);
+
   const handleFileDrop = useCallback((droppedFiles: File[]) => {
     const filesToProcess = Array.from(droppedFiles).filter(f => 
       SUPPORTED_DOC_TYPES.includes(f.type) || SUPPORTED_IMG_TYPES.includes(f.type)
@@ -199,13 +212,14 @@ const App: React.FC = () => {
     if (!filesToProcess.length) return;
 
     if (!activeCaseId) {
+        // Create a new case. The useEffect will see the new activeCaseId
+        // and process the files from the queue.
         handleNewCase();
-        // Note: Due to async state, we can't immediately process. 
-        // A robust solution would queue files, but for now, this creates the case.
-        return;
     }
-    filesToProcess.forEach(processFile);
-  }, [activeCaseId, handleNewCase, processFile]);
+    
+    // Add files to the queue for processing.
+    setFileQueue(q => [...q, ...filesToProcess]);
+  }, [activeCaseId, handleNewCase]);
   
   const handleDeleteNode = (idToDelete: string) => {
     updateActiveCase(c => ({
