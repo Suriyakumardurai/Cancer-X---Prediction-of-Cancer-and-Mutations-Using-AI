@@ -19,6 +19,7 @@ export interface NodeData {
   result?: DocumentAnalysis | ImageAnalysis;
   error?: string;
   type: 'doc' | 'img';
+  dataUrl?: string;
 }
 
 export interface Case {
@@ -30,6 +31,23 @@ export interface Case {
   synthesisStatus: 'idle' | 'loading' | 'done';
   synthesizedNodeCount: number;
   chatHistory: ChatMessage[];
+}
+
+// Helper to convert data URL to File object
+const dataURLtoFile = (dataurl: string, filename: string): File => {
+    const arr = dataurl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    if (!mimeMatch) {
+      throw new Error('Invalid data URL');
+    }
+    const mime = mimeMatch[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
 }
 
 // Helper function to force-save state to the database (localStorage)
@@ -55,7 +73,16 @@ const App: React.FC = () => {
       if (savedCases) {
         const parsedCases = JSON.parse(savedCases);
         // Rehydrate File objects which are not serializable
-        return parsedCases.map((c: Case) => ({ ...c, nodes: c.nodes.map(n => ({...n, file: new File([], n.file.name, {type: n.file.type})})) }));
+        return parsedCases.map((c: any) => ({
+            ...c,
+            nodes: c.nodes.map((n: any) => {
+                // If a dataUrl exists (for images), convert it back to a File object
+                const file = n.dataUrl
+                    ? dataURLtoFile(n.dataUrl, n.file.name)
+                    : new File([], n.file.name, {type: n.file.type});
+                return {...n, file};
+            })
+        }));
       }
     } catch (error) {
       console.error("Error reading cases from localStorage", error);
@@ -172,15 +199,19 @@ const App: React.FC = () => {
     if (!activeCaseId) return;
     const id = `${file.name}-${file.size}-${Date.now()}`;
     const type = SUPPORTED_DOC_TYPES.includes(file.type) ? 'doc' : 'img';
+
+    const { base64, mimeType } = await fileToBase64(file);
+    const dataUrl = type === 'img' ? `data:${mimeType};base64,${base64}` : undefined;
+    
+    const newNode: NodeData = { id, file, status: 'analyzing', type, dataUrl };
     
     updateActiveCase(c => ({
       ...c,
-      nodes: [...c.nodes, { id, file, status: 'analyzing', type }]
+      nodes: [...c.nodes, newNode]
     }));
     setActiveFileId(id);
 
     try {
-      const { base64, mimeType } = await fileToBase64(file);
       let result;
       if (type === 'doc') {
         result = await analyzeDocument(base64, mimeType);
