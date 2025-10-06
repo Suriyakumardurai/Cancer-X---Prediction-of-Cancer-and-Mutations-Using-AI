@@ -1,15 +1,23 @@
 {
-  "name": "cancerx-app",
-  "version": "1.0.0",
-  "description": "A state-of-the-art platform that assists oncologists by providing a unified analysis of patient data.",
-  "main": "index.html",
+  "name": "cancerx",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "echo 'This is a client-side only application. Open index.html in a browser.'",
-    "dev": "npm start"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "author": "",
-  "license": "ISC",
-  "engines": {
-    "node": ">=18.0.0"
+  "dependencies": {
+    "@google/genai": "^1.20.0",
+    "chart.js": "^4.5.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.3.6"
   }
 }
