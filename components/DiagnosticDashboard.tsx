@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { NodeData } from '../App';
 import type { ChatMessage, DocumentAnalysis, ImageAnalysis } from '../types';
 import { CaseIntake } from './CaseIntake';
@@ -19,6 +19,27 @@ interface DiagnosticDashboardProps {
   isChatLoading: boolean;
   onSendMessage: (message: string) => void;
 }
+
+const useWindowSize = () => {
+    const [size, setSize] = useState([window.innerWidth, window.innerHeight]);
+    useEffect(() => {
+        const handleResize = () => {
+            setSize([window.innerWidth, window.innerHeight]);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+    return size;
+};
+
+const ResizableHandle: React.FC<{ onMouseDown: (event: React.MouseEvent) => void }> = ({ onMouseDown }) => (
+    <div
+        className="w-1.5 bg-transparent hover:bg-teal-200/50 active:bg-teal-300/50 cursor-col-resize transition-colors duration-200 flex-shrink-0"
+        onMouseDown={onMouseDown}
+        role="separator"
+        aria-orientation="vertical"
+    />
+);
 
 const WelcomeScreen: React.FC = () => (
     <div className="flex flex-col items-center justify-center h-full text-center text-stone-500 p-4 sm:p-8">
@@ -48,7 +69,61 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
 
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [mobileView, setMobileView] = useState<'list' | 'viewer' | 'chat'>('list');
+    
+    // State for resizable panels and chat visibility
+    const [isChatVisible, setIsChatVisible] = useState(true);
+    const [dividers, setDividers] = useState([25, 75]); // Positions of dividers in percentage
+    const containerRef = useRef<HTMLDivElement>(null);
+    const isResizing = useRef<number | null>(null);
+    const [width] = useWindowSize();
+    const isDesktop = width >= 768; // Tailwind's `md` breakpoint
+
     const activeFile = nodes.find(n => n.id === activeFileId);
+
+    const handleMouseDown = (dividerIndex: number) => (event: React.MouseEvent) => {
+        event.preventDefault();
+        isResizing.current = dividerIndex;
+        document.body.style.cursor = 'col-resize';
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const handleMouseMove = useCallback((event: MouseEvent) => {
+        if (isResizing.current === null || !containerRef.current) return;
+
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const position = ((event.clientX - containerRect.left) / containerRect.width) * 100;
+        const minWidth = 15; // Minimum 15% width for panels
+
+        setDividers(prev => {
+            const newDividers = [...prev];
+            if (isResizing.current === 0) { // First divider
+                const maxPos = isChatVisible ? prev[1] - minWidth : 100 - minWidth;
+                newDividers[0] = Math.max(minWidth, Math.min(position, maxPos));
+            } else if (isResizing.current === 1) { // Second divider
+                const minPos = prev[0] + minWidth;
+                newDividers[1] = Math.max(minPos, Math.min(position, 100 - minWidth));
+            }
+            return newDividers;
+        });
+    }, [isChatVisible]);
+
+    const handleMouseUp = useCallback(() => {
+        isResizing.current = null;
+        document.body.style.cursor = 'default';
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+    }, [handleMouseMove]);
+
+    useEffect(() => {
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }, [handleMouseMove, handleMouseUp]);
+
+    const toggleChat = () => setIsChatVisible(prev => !prev);
+
 
     useEffect(() => {
         let objectUrl: string | null = null;
@@ -65,7 +140,6 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
     }, [activeFile]);
     
     useEffect(() => {
-        // If all files are deleted, go back to the list view on mobile
         if (nodes.length === 0) {
             setMobileView('list');
         }
@@ -76,10 +150,7 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
         setMobileView('viewer');
     };
 
-    const handleBackToList = () => {
-        setMobileView('list');
-    };
-
+    const handleBackToList = () => setMobileView('list');
     const handleOpenChat = () => setMobileView('chat');
     const handleCloseChat = () => setMobileView(activeFileId === 'welcome' || activeFileId === '' ? 'list' : 'viewer');
 
@@ -106,11 +177,18 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
         }
         return <WelcomeScreen />;
     };
+    
+    const leftWidth = dividers[0];
+    const centerWidth = isChatVisible ? dividers[1] - dividers[0] : 100 - dividers[0];
+    const rightWidth = isChatVisible ? 100 - dividers[1] : 0;
 
     return (
-        <div className="w-full flex-grow p-2 sm:p-4 grid grid-cols-12 md:gap-4 relative">
+        <div ref={containerRef} className="w-full h-full p-2 sm:p-4 flex relative">
             {/* Left Panel */}
-            <div className={`col-span-12 md:col-span-3 section-card flex-col min-h-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
+            <div
+                style={isDesktop ? { width: `${leftWidth}%` } : undefined}
+                className={`section-card flex-col min-h-0 flex-shrink-0 ${mobileView === 'list' ? 'flex w-full' : 'hidden md:flex'}`}
+            >
                 <CaseIntake 
                     nodes={nodes}
                     activeFileId={activeFileId}
@@ -121,8 +199,15 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
                 />
             </div>
 
+            {/* First Divider */}
+            {isDesktop && <ResizableHandle onMouseDown={handleMouseDown(0)} />}
+
+
             {/* Center Panel */}
-            <div className={`col-span-12 md:col-span-6 section-card flex-col overflow-hidden min-h-0 ${mobileView === 'viewer' ? 'flex' : 'hidden md:flex'}`}>
+            <div
+                style={isDesktop ? { width: `${centerWidth}%` } : undefined}
+                className={`section-card flex-col overflow-hidden min-h-0 flex-shrink-0 ${mobileView === 'viewer' ? 'flex w-full' : 'hidden md:flex'}`}
+            >
                 <div className="flex-grow p-2 sm:p-6 overflow-y-auto light-scrollbar relative">
                   <button onClick={handleBackToList} className="md:hidden absolute top-3 left-3 z-10 p-2 rounded-full bg-stone-100/80 hover:bg-stone-200/80 backdrop-blur-sm">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
@@ -131,29 +216,48 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
                 </div>
             </div>
 
-            {/* Right Panel */}
-            <div className={`col-span-12 md:col-span-3 section-card flex-col min-h-0 absolute md:static inset-0 z-20 bg-[var(--surface-color)] ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
-                 <div className="p-4 border-b border-stone-200 flex-shrink-0 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-stone-700 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2 text-teal-600" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"/></svg>
-                        AI Assistant
-                    </h3>
-                    <button onClick={handleCloseChat} className="md:hidden p-2 text-stone-500 hover:text-stone-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+            {/* Right Panel and Divider (Conditional) */}
+            {isChatVisible && isDesktop && <ResizableHandle onMouseDown={handleMouseDown(1)} />}
+            {isChatVisible && (
+                 <div
+                    style={isDesktop ? { width: `${rightWidth}%` } : undefined}
+                    className={`section-card flex-col min-h-0 flex-shrink-0 ${mobileView === 'chat' ? 'absolute inset-0 z-20 flex bg-[var(--surface-color)]' : 'hidden md:flex'}`}
+                >
+                    <div className="p-4 border-b border-stone-200 flex-shrink-0 flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-stone-700 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2 text-teal-600" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"/></svg>
+                            AI Assistant
+                        </h3>
+                        <button onClick={handleCloseChat} className="md:hidden p-2 text-stone-500 hover:text-stone-800" aria-label="Close chat">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                        <button onClick={toggleChat} className="hidden md:block p-2 text-stone-500 hover:text-stone-800" aria-label="Hide panel">
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+                        </button>
+                    </div>
+                    <Chat
+                        messages={chatHistory}
+                        onSendMessage={onSendMessage}
+                        isLoading={isChatLoading}
+                    />
                 </div>
-                <Chat
-                    messages={chatHistory}
-                    onSendMessage={onSendMessage}
-                    isLoading={isChatLoading}
-                />
-            </div>
+            )}
+
 
             {/* Mobile Chat FAB */}
             <button 
                 onClick={handleOpenChat}
                 className={`md:hidden fixed bottom-6 right-6 z-10 p-4 bg-teal-600 text-white rounded-full shadow-lg hover:bg-teal-700 transition-transform transform active:scale-95 ${mobileView !== 'list' && mobileView !== 'viewer' ? 'hidden' : 'block'}`}
                 aria-label="Open AI Assistant"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"/></svg>
+            </button>
+
+             {/* Desktop Show Chat Button */}
+            <button
+                onClick={toggleChat}
+                className={`hidden md:flex items-center justify-center fixed bottom-6 right-6 z-10 p-4 bg-teal-600 text-white rounded-full shadow-lg hover:bg-teal-700 transition-all transform active:scale-95 ${isChatVisible ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}
+                aria-label="Show AI Assistant"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"/></svg>
             </button>
