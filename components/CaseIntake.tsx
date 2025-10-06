@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileUpload } from './FileUpload';
-import type { NodeData } from '../App';
+import type { NodeData } from '../types';
 
 interface CaseIntakeProps {
   nodes: NodeData[];
@@ -72,7 +72,7 @@ export const CaseIntake: React.FC<CaseIntakeProps> = ({ nodes, activeFileId, onF
                 className={`w-full flex items-center space-x-3 text-left p-2.5 rounded-lg transition-colors duration-200 ${activeFileId === node.id ? 'bg-teal-100 text-teal-800' : 'hover:bg-stone-100'}`}
               >
                 <span className="flex-shrink-0"><FileIcon type={node.type} /></span>
-                <span className={`flex-1 text-sm truncate ${activeFileId === node.id ? 'text-teal-800' : 'text-stone-600'}`}>{node.file.name}</span>
+                <span className={`flex-1 text-sm truncate ${activeFileId === node.id ? 'text-teal-800' : 'text-stone-600'}`}>{node.file_name}</span>
                 <span className="flex-shrink-0 w-5 h-5">{getStatusIcon(node.status)}</span>
               </button>
                <button
@@ -81,7 +81,7 @@ export const CaseIntake: React.FC<CaseIntakeProps> = ({ nodes, activeFileId, onF
                   onDeleteNode(node.id);
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full text-stone-400 hover:bg-red-100 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                aria-label={`Delete ${node.file.name}`}
+                aria-label={`Delete ${node.file_name}`}
               >
                 <XIcon className="w-4 h-4" />
               </button>

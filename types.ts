@@ -40,9 +40,31 @@ export interface ChatMessage {
     content: string;
 }
 
-export interface FileAnalysisError {
-    fileName: string;
-    reason: string;
+// --- App Data Structures ---
+
+export type NodeStatus = 'pending' | 'analyzing' | 'success' | 'error';
+
+// This interface reflects the data coming from the backend API now.
+// The actual 'File' object is no longer stored on the client.
+export interface NodeData {
+  id: string;
+  file_name: string; // Changed from 'file' object
+  mime_type: string;
+  status: NodeStatus;
+  result?: DocumentAnalysis | ImageAnalysis;
+  error?: string;
+  type: 'doc' | 'img';
+  // The 'file' object can be temporarily added during optimistic updates
+  file?: File; 
 }
 
-export type AppState = 'idle' | 'loading_analysis' | 'loading_synthesis' | 'results' | 'error';
+export interface Case {
+  id: string;
+  name: string;
+  createdAt: number;
+  nodes: NodeData[];
+  synthesisReport: string | null;
+  synthesisStatus: 'idle' | 'loading' | 'done';
+  chatHistory: ChatMessage[];
+  synthesizedNodeCount: number;
+}
