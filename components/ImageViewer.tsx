@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import type { ImageAnalysis } from '../types';
+import { renderMarkdown } from '../utils/markdownUtils';
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -112,14 +113,20 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, analysis }) 
         
         <div className="lg:col-span-1 bg-white border border-[var(--border-color)] rounded-3xl p-6 flex flex-col">
             <h3 className="text-2xl font-bold text-[var(--text-color)] mb-6 flex-shrink-0">Analysis Details</h3>
-            <div className="flex-grow space-y-6 overflow-y-auto light-scrollbar pr-2">
+            <div className="flex-grow space-y-8 overflow-y-auto light-scrollbar pr-2">
+                {analysis?.laypersonsSummary && (
+                    <div className="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-r-lg">
+                        <h4 className="text-sm font-bold text-teal-800 uppercase tracking-wider">Simplified Summary</h4>
+                        <div className="prose-custom max-w-none !text-base mt-2" dangerouslySetInnerHTML={{ __html: renderMarkdown(analysis.laypersonsSummary) }} />
+                    </div>
+                )}
                 <div>
                     <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Scan Description</h4>
-                    <p className="text-base text-slate-700 mt-2 leading-relaxed">{analysis?.imageDescription || 'N/A'}</p>
+                    <div className="prose-custom max-w-none !text-base mt-2" dangerouslySetInnerHTML={{ __html: renderMarkdown(analysis?.imageDescription || 'N/A') }} />
                 </div>
                 <div>
                     <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Findings Summary</h4>
-                    <p className="text-base text-slate-700 mt-2 leading-relaxed">{analysis?.findingsSummary || 'No summary available.'}</p>
+                    <div className="prose-custom max-w-none !text-base mt-2" dangerouslySetInnerHTML={{ __html: renderMarkdown(analysis?.findingsSummary || 'No summary available.') }} />
                 </div>
             </div>
             <div className="mt-6 flex-shrink-0 border-t border-[var(--border-color)] pt-6">

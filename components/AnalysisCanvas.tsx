@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { DataNode } from './DataNode';
-// FIX: The 'NodeData' type is exported from '../types', not '../App'.
 import type { NodeData } from '../types';
 
 interface AnalysisCanvasProps {

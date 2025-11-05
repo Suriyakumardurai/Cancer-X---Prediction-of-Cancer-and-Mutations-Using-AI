@@ -34,8 +34,9 @@ const documentAnalysisSchema = {
           description: "A list of the most critical findings from the report. If not available or invalid, return an empty array.",
           items: { type: Type.STRING },
         },
+        laypersonsSummary: { type: Type.STRING, description: "A simplified summary of the key findings in easy-to-understand, non-technical language for the patient. Explain complex terms simply. If the report is benign, state that clearly."}
     },
-    required: ["isReportValid", "validityReasoning", "patientName", "cancerType", "tumorGrade", "stage", "biomarkers", "keyFindings"],
+    required: ["isReportValid", "validityReasoning", "patientName", "cancerType", "tumorGrade", "stage", "biomarkers", "keyFindings", "laypersonsSummary"],
 };
 
 const imageAnalysisSchema = {
@@ -46,8 +47,9 @@ const imageAnalysisSchema = {
     imageDescription: { type: Type.STRING, description: "A concise, technical description of the medical image itself. If not available or invalid, return an empty string." },
     findingsSummary: {
       type: Type.STRING,
-      description: "A concise summary of the clinical findings or key features shown in the visual. If not available or invalid, return an empty string.",
+      description: "A concise summary of the clinical findings or key features shown in the visual. Use Markdown for formatting if necessary (e.g., bullet points for multiple findings). If not available or invalid, return an empty string.",
     },
+    laypersonsSummary: { type: Type.STRING, description: "A simplified summary of the key findings in easy-to-understand, non-technical language for the patient. Explain complex terms simply. If the scan is normal, state that clearly." },
     regionsOfInterest: {
       type: Type.ARRAY,
       description: "A list of suspicious or key regions identified. Bounding boxes must be precise. If not applicable (e.g., simple diagram) or not available, return an empty array.",
@@ -65,16 +67,15 @@ const imageAnalysisSchema = {
       },
     },
   },
-  required: ["isScanValid", "validityReasoning", "imageDescription", "findingsSummary", "regionsOfInterest"],
+  required: ["isScanValid", "validityReasoning", "imageDescription", "findingsSummary", "laypersonsSummary", "regionsOfInterest"],
 };
 
 
 export const analyzeDocument = async (base64Report: string, mimeType: string): Promise<DocumentAnalysis> => {
   const filePart = { inlineData: { data: base64Report, mimeType } };
-  const textPart = { text: `Your task is to act as a world-class medical data extraction system with expertise in oncology. Your accuracy is paramount. 1. **VALIDATE THE DOCUMENT:** First, carefully examine the provided document file. Perform OCR if necessary. Determine if it is a medical document, specifically an oncology or pathology report. 2. **RESPOND BASED ON VALIDITY:** If it is NOT a valid report, set \`isReportValid\` to \`false\`, provide a reason, and populate all other fields with empty values. If it IS a valid report, set \`isReportValid\` to \`true\` and accurately extract all required information. **Crucially, if the report's conclusion is benign, normal, or shows no evidence of malignancy, ensure this is clearly stated as the primary entry in the \`keyFindings\` array.**` };
+  const textPart = { text: `Your task is to act as a world-class medical data extraction system with expertise in oncology. Your accuracy is paramount. 1. **VALIDATE & EXTRACT:** First, carefully examine the provided document. Determine if it is a medical document (e.g., oncology, pathology report). If it IS a valid report, set \`isReportValid\` to \`true\` and accurately extract all required information. 2. **SUMMARIZE FOR PATIENT:** Create a 'laypersonsSummary' that explains the key findings in simple, easy-to-understand terms. Avoid jargon. If the report is benign or normal, state this clearly and reassuringly. 3. **HANDLE INVALID DOCS:** If it is NOT a valid report, set \`isReportValid\` to \`false\`, provide a reason, and populate all other fields with empty values.` };
 
   const response = await ai.models.generateContent({
-    // FIX: Updated model to gemini-2.5-flash as per guidelines for basic text tasks.
     model: 'gemini-2.5-flash',
     contents: { parts: [filePart, textPart] },
     config: { responseMimeType: 'application/json', responseSchema: documentAnalysisSchema },
@@ -84,10 +85,9 @@ export const analyzeDocument = async (base64Report: string, mimeType: string): P
 
 export const analyzeImage = async (base64Image: string, mimeType: string): Promise<ImageAnalysis> => {
   const imagePart = { inlineData: { data: base64Image, mimeType } };
-  const textPart = { text: `You are a world-class AI medical imaging analyst. Your task is to analyze the provided image with the highest degree of accuracy. 1. **VALIDATE THE IMAGE:** Determine if it is a medically relevant image (e.g., CT scan, MRI, X-ray, anatomical illustration, pathology diagram). 2. **DESCRIBE & ANALYZE:** If valid, provide a concise technical description and summarize clinical findings. **Crucially, if the image shows healthy tissue or a normal scan with no signs of malignancy or significant abnormalities, the \`findingsSummary\` must clearly state this (e.g., "The scan appears normal with no evidence of malignancy.").** Do not pathologize normal features. Identify key regions of interest with bounding boxes only if clinically relevant abnormalities are present. 3. **HANDLE INVALID IMAGES:** If it's not a medically relevant image (e.g., a photo of a car), set \`isScanValid\` to \`false\`, explain why, and leave other fields empty.` };
+  const textPart = { text: `You are a world-class AI medical imaging analyst. Your task is to analyze the provided image with the highest degree of accuracy. 1. **VALIDATE & ANALYZE:** Determine if it's a medically relevant image (e.g., CT, MRI). If valid, provide a technical description and summarize clinical findings. Identify key regions of interest with bounding boxes only if clinically relevant abnormalities are present. 2. **SUMMARIZE FOR PATIENT:** Create a 'laypersonsSummary' that explains what the scan shows and what the findings mean in simple, non-technical language. If the scan appears normal, state this clearly and reassuringly. 3. **HANDLE INVALID IMAGES:** If it's not a medically relevant image (e.g., a photo of a car), set \`isScanValid\` to \`false\`, explain why, and leave other fields empty.` };
 
   const response = await ai.models.generateContent({
-    // FIX: Updated model to gemini-2.5-flash as per guidelines for basic text tasks with images.
     model: 'gemini-2.5-flash',
     contents: { parts: [imagePart, textPart] },
     config: { responseMimeType: 'application/json', responseSchema: imageAnalysisSchema }
@@ -100,25 +100,25 @@ export const createMultiFileSynthesisReport = async (documentAnalyses: DocumentA
     return "No valid data available to generate a synthesis report.";
   }
   
-  const prompt = `You are an expert AI assistant for oncologists. Create a unified Patient Synthesis Report by correlating findings from the provided set of pathology reports and medical scans.
-    
-    **Pathology Report Analyses (${documentAnalyses.length} reports):**
-    ${documentAnalyses.map(doc => `--- Report: ${doc.fileName} ---\n${JSON.stringify(doc, null, 2)}`).join('\n\n')}
+  const prompt = `You are an expert AI assistant for oncologists. Create a unified Patient Synthesis Report by correlating findings from the provided set of pathology reports and medical scans. Structure your response using Markdown for optimal clarity.
 
-    **Medical Scan Analyses (${imageAnalyses.length} scans):**
-    ${imageAnalyses.map(img => `--- Scan: ${img.fileName} ---\n${JSON.stringify(img, null, 2)}`).join('\n\n')}
-    
-    **Instructions:**
-    1.  First, create a section titled **"Source Documents"**. In this section, provide a simple bulleted list of the filenames of all reports and scans being analyzed (e.g., \`* Report: patient_report_2023.pdf\`, \`* Scan: ct_scan_chest.jpeg\`).
-    2.  Next, create a high-level **"Integrated Summary"**. Consolidate patient details if they are consistent across reports. If an analyst directive was provided, address it directly in this summary.
-    3.  Then, in a section called **"Correlated Findings & Progression"**, critically correlate findings across ALL documents. Explicitly state whether scans confirm findings in reports and reference the specific files (e.g., "The nodule seen in \`ct_scan_chest.jpeg\` corresponds to the mass described in \`pathology_report.pdf\`."). If multiple reports exist, note any progression or changes over time. Highlight any discrepancies.
-    4.  Finally, create a section for **"Key Biomarkers & Clinical Context"**.
-    5.  Maintain a professional, clinical tone. Be concise and direct. Use markdown for clear formatting.
-  `;
+**Pathology Report Analyses (${documentAnalyses.length} reports):**
+${documentAnalyses.map(doc => `--- Report: ${doc.fileName} ---\n${JSON.stringify(doc, null, 2)}`).join('\n\n')}
+
+**Medical Scan Analyses (${imageAnalyses.length} scans):**
+${imageAnalyses.map(img => `--- Scan: ${img.fileName} ---\n${JSON.stringify(img, null, 2)}`).join('\n\n')}
+
+**Instructions:**
+1.  Start with a title: \`## Unified Synthesis Report\`.
+2.  Create a section \`### Source Documents\`. Provide a bulleted list of all source filenames.
+3.  Create a section \`### Integrated Clinical Summary\`. Consolidate patient details and summarize the overall clinical picture.
+4.  Create a section \`### Correlated Findings & Progression\`. Critically correlate findings across ALL documents. Use a **Markdown table** if useful to compare findings side-by-side. Explicitly state whether scans confirm findings in reports (e.g., "The nodule in \`scan.jpeg\` corresponds to the mass in \`report.pdf\`."). Note any progression or discrepancies.
+5.  Create a section \`### Key Biomarkers & Clinical Context\`. List and explain the significance of any identified biomarkers.
+6.  Finally, create a section \`### Simplified Summary for the Patient\`. Explain the overall results in simple, non-technical language that a patient can easily understand. Be clear and reassuring if the findings are benign.
+`;
 
   const response = await ai.models.generateContent({
-    // FIX: Updated model to gemini-flash-latest as per guidelines for gemini flash alias.
-    model: 'gemini-flash-latest',
+    model: 'gemini-2.5-flash',
     contents: prompt,
     config: { temperature: 0.1 }
   });
@@ -127,7 +127,7 @@ export const createMultiFileSynthesisReport = async (documentAnalyses: DocumentA
 
 export const askQuestion = async (analysisContext: AnalysisResult, history: ChatMessage[], question: string): Promise<string> => {
     const contextPrompt = `
-      You are an expert oncology AI assistant. Your purpose is to answer questions based *only* on the provided analysis data from a patient's case file. Do not use external knowledge or make assumptions beyond what is in the context.
+      You are an expert oncology AI assistant. Your purpose is to answer questions based *only* on the provided analysis data from a patient's case file. Do not use external knowledge. Explain complex medical terms in a simple way if the user's question implies they are not a medical professional. Format your answer clearly using Markdown (lists, bolding) if it helps with readability.
       
       **Available Analysis Context:**
       ${analysisContext.documentAnalyses.length > 0 ? `**Pathology Report Summaries:**\n${analysisContext.documentAnalyses.map(doc => `File: ${doc.fileName}\n${JSON.stringify(doc, null, 2)}`).join('\n---\n')}` : ''}
@@ -144,7 +144,6 @@ export const askQuestion = async (analysisContext: AnalysisResult, history: Chat
     `;
     
     const response = await ai.models.generateContent({
-        // FIX: Updated model to gemini-2.5-flash as per guidelines for basic text tasks.
         model: 'gemini-2.5-flash',
         contents: contextPrompt,
         config: {

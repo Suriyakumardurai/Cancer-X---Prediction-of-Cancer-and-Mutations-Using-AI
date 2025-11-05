@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { PatientSummary } from './PatientSummary';
 import { ImageViewer } from './ImageViewer';
 import { ReportView } from './ReportView';
-// FIX: The 'NodeData' type is exported from '../types', not '../App'. Also, consolidated type imports.
 import type { NodeData, DocumentAnalysis, ImageAnalysis } from '../types';
 
 interface DetailViewerProps {
@@ -78,5 +77,5 @@ export const DetailViewer: React.FC<DetailViewerProps> = ({ node, synthesisRepor
 const XIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6"x2="18" y2="18"></line></svg>
 );
-// FIX: Updated XCircleIcon to accept props like className, resolving the type error.
+
 const XCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;

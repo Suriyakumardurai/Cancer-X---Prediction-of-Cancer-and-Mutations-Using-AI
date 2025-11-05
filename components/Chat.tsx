@@ -1,22 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
+import { renderMarkdown } from '../utils/markdownUtils';
 
 interface ChatProps {
     messages: ChatMessage[];
     onSendMessage: (message: string) => void;
     isLoading: boolean;
 }
-
-const formatContent = (text: string) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-      .replace(/\* (.*?)(?=\n\*|\n\n|$)/g, '<li class="flex items-start"><span class="mr-2 mt-1">&#8226;</span><span>$1</span></li>')
-      .replace(/(\n|^)#{1,6}\s(.*)/g, (match, p1, p2) => `${p1}<h4 class="text-md font-bold mt-3 mb-1">${p2}</h4>`)
-      .replace(/(<li.*<\/li>)+/g, (match) => `<ul class="space-y-1 mt-2">${match}</ul>`)
-      .replace(/\n/g, '<br />')
-      .replace(/<br \/>(<ul|<h4)/g, '$1')
-      .replace(/(<\/ul>)<br \/>/g, '$1');
-  };
 
 export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage, isLoading }) => {
     const [input, setInput] = useState('');
@@ -58,7 +48,7 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage, isLoading }
                     {messages.map((msg, index) => (
                         <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[90%] px-5 py-3.5 rounded-3xl ${msg.role === 'user' ? 'bg-teal-600 text-white rounded-br-xl' : 'bg-white text-[var(--text-color)] rounded-bl-xl border border-[var(--border-color)]'}`}>
-                                <div className="prose prose-sm max-w-none text-inherit" dangerouslySetInnerHTML={{ __html: formatContent(msg.content) }}></div>
+                                <div className="prose-custom prose-sm max-w-none text-inherit" dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}></div>
                             </div>
                         </div>
                     ))}

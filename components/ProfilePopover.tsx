@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-// FIX: The 'User' type is exported from '../types', not '../App'.
 import type { User } from '../types';
 
 interface ProfilePopoverProps {

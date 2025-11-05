@@ -1,6 +1,5 @@
 
 
-// FIX: Removed self-import of types that caused declaration conflicts.
 export interface DocumentAnalysis {
   fileName?: string;
   isReportValid: boolean;
@@ -11,6 +10,7 @@ export interface DocumentAnalysis {
   stage?: string;
   biomarkers?: { name: string; status: string }[];
   keyFindings?: string[];
+  laypersonsSummary?: string;
 }
 
 export interface BoundingBox {
@@ -28,6 +28,7 @@ export interface ImageAnalysis {
   validityReasoning: string;
   imageDescription?: string;
   findingsSummary?: string;
+  laypersonsSummary?: string;
   regionsOfInterest?: BoundingBox[];
 }
 

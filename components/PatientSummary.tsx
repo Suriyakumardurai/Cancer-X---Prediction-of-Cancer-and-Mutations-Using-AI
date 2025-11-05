@@ -1,5 +1,6 @@
 import React from 'react';
 import type { DocumentAnalysis } from '../types';
+import { renderMarkdown } from '../utils/markdownUtils';
 
 interface PatientSummaryProps {
   data: DocumentAnalysis;
@@ -34,6 +35,16 @@ export const PatientSummary: React.FC<PatientSummaryProps> = ({ data }) => {
         <h2 className="text-4xl md:text-5xl font-extrabold text-[var(--text-color)] tracking-tighter">{`Findings for: ${data.fileName}`}</h2>
       </div>
       
+      {data.laypersonsSummary && (
+        <div className="mb-12 bg-teal-50 border border-teal-200 rounded-3xl p-6 sm:p-8">
+            <h3 className="text-2xl font-bold text-teal-800 mb-4">Simplified Summary for the Patient</h3>
+            <div
+                className="prose-custom max-w-none"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(data.laypersonsSummary) }}
+            />
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-12">
         <DataBlock label="Patient Name" value={data.patientName} />
         <DataBlock label="Cancer Type" value={data.cancerType} />
