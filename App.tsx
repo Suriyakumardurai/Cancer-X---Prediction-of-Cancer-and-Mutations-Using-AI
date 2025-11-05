@@ -9,6 +9,8 @@ import { fileToBase64 } from './utils/fileUtils';
 import { LoginPage } from './components/LoginPage';
 import { generateUniqueCode } from './utils/codeGenerator';
 import { getAppData, saveAppData } from './utils/storageUtils';
+import { AppSelectionPage } from './components/AppSelectionPage';
+import { VirtualDoctorPage } from './components/VirtualDoctorPage';
 
 const SUPPORTED_DOC_TYPES = ['application/pdf', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
 const SUPPORTED_IMG_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -27,7 +29,7 @@ const App: React.FC = () => {
       return null;
   });
 
-  const [view, setView] = useState<'hub' | 'dashboard'>('hub');
+  const [view, setView] = useState<'hub' | 'dashboard' | 'selection' | 'virtual_doctor'>('selection');
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
   const [activeFileId, setActiveFileId] = useState<string>('welcome');
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
@@ -42,12 +44,14 @@ const App: React.FC = () => {
   }, [appData]);
 
   useEffect(() => {
-    if (currentUser && (view !== 'hub' || activeCaseId !== null)) {
-        setView('hub');
-        setActiveCaseId(null);
+    if (currentUser) {
+        // When a user logs in, always start at the selection screen.
+        // Don't reset if they are already navigating within the app.
+        if (view !== 'hub' && view !== 'dashboard' && view !== 'virtual_doctor') {
+            setView('selection');
+        }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser]);
+  }, [currentUser, view]);
 
   useEffect(() => {
     if (view === 'dashboard' && !activeCase) {
@@ -55,28 +59,31 @@ const App: React.FC = () => {
     }
   }, [view, activeCase]);
 
-  const handleRegister = (name: string, email: string, pass: string): User | { error: string } => {
-    let userToReturn: User | null = null;
-    let error: string | null = null;
-
-    setAppData(data => {
-        if (data.users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-            error = "An account with this email already exists.";
-            return data;
-        }
-        const allUserIds = data.users.map(u => u.id);
-        const newUser: User = { 
-            id: generateUniqueCode(allUserIds), 
-            name, 
-            email, 
-            password: pass // Note: In a real app, hash this password!
-        };
-        userToReturn = newUser;
-        return { ...data, users: [...data.users, newUser] };
-    });
-
-    if (error) return { error };
-    return userToReturn!;
+  const handleRegister = (name: string, email: string, pass: string): void | { error: string } => {
+    // Synchronously check for existing user to provide immediate feedback
+    if (appData.users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+        return { error: "An account with this email already exists." };
+    }
+    
+    const allUserIds = appData.users.map(u => u.id);
+    const newUser: User = { 
+        id: generateUniqueCode(allUserIds), 
+        name, 
+        email, 
+        password: pass // Note: In a real app, hash this password!
+    };
+    
+    // Update state with new user
+    setAppData(prevData => ({
+        ...prevData,
+        users: [...prevData.users, newUser],
+        cases: { ...prevData.cases, [newUser.id]: [] } // Initialize cases for new user
+    }));
+    
+    // Automatically log in the new user
+    window.sessionStorage.setItem('cancerx_user', newUser.id);
+    setCurrentUser(newUser);
+    // The useEffect listening for currentUser changes will handle setting the view.
   };
 
   const handleLogin = (email: string, pass: string): User | { error: string } => {
@@ -84,6 +91,7 @@ const App: React.FC = () => {
     if (user) {
       window.sessionStorage.setItem('cancerx_user', user.id);
       setCurrentUser(user);
+      setView('selection'); // Go to selection screen on login
       return user;
     }
     return { error: 'Invalid email or password.' };
@@ -92,6 +100,7 @@ const App: React.FC = () => {
   const handleLogout = () => {
       window.sessionStorage.removeItem('cancerx_user');
       setCurrentUser(null);
+      // The lack of currentUser will automatically render LoginPage
   };
   
   const handleNewCase = useCallback(() => {
@@ -308,6 +317,10 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (view) {
+        case 'selection':
+            return <AppSelectionPage user={currentUser} onLogout={handleLogout} onNavigate={setView} />;
+        case 'virtual_doctor':
+            return <VirtualDoctorPage user={currentUser} cases={userCases} onLogout={handleLogout} onBack={() => setView('selection')} />;
         case 'hub':
             return <CaseHub 
                         cases={userCases}
@@ -316,11 +329,12 @@ const App: React.FC = () => {
                         onDeleteCase={handleDeleteCase}
                         onRenameCase={handleRenameCase}
                         user={currentUser}
+                        onBack={() => setView('selection')}
                     />;
         case 'dashboard':
             if (activeCase) {
                 return (
-                     <div className="h-screen w-screen bg-[var(--bg-color)] text-stone-800 flex flex-col font-sans">
+                     <div className="h-screen w-screen flex flex-col font-sans">
                       <Header 
                         user={currentUser}
                         onLogout={handleLogout}
@@ -353,9 +367,9 @@ const App: React.FC = () => {
                 );
             }
             // Fallback for when dashboard is the view but no active case is selected (e.g., after deletion)
-            return <CaseHub cases={userCases} onSelectCase={handleSelectCase} onNewCase={handleNewCase} onDeleteCase={handleDeleteCase} onRenameCase={handleRenameCase} user={currentUser} />;
+            return <CaseHub cases={userCases} onSelectCase={handleSelectCase} onNewCase={handleNewCase} onDeleteCase={handleDeleteCase} onRenameCase={handleRenameCase} user={currentUser} onBack={() => setView('selection')} />;
         default:
-             return <CaseHub cases={userCases} onSelectCase={handleSelectCase} onNewCase={handleNewCase} onDeleteCase={handleDeleteCase} onRenameCase={handleRenameCase} user={currentUser} />;
+             return <AppSelectionPage user={currentUser} onLogout={handleLogout} onNavigate={setView} />;
     }
   }
 

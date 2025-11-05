@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { DocumentAnalysis } from '../types';
 import { renderMarkdown } from '../utils/markdownUtils';
@@ -7,7 +8,7 @@ interface PatientSummaryProps {
 }
 
 const DataBlock: React.FC<{ label: string; value: string | undefined }> = ({ label, value }) => (
-  <div className="bg-slate-50 p-4 rounded-2xl border border-[var(--border-color)]">
+  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
     <p className="text-sm text-[var(--text-muted-color)] font-medium">{label}</p>
     <p className="text-lg font-semibold text-[var(--text-color)] mt-1 break-words">{value || <span className="text-slate-400">N/A</span>}</p>
   </div>
@@ -16,8 +17,8 @@ const DataBlock: React.FC<{ label: string; value: string | undefined }> = ({ lab
 const BiomarkerTag: React.FC<{ name: string; status: string }> = ({ name, status }) => {
     const isPositive = status.toLowerCase().includes('positive');
     const colorClasses = isPositive 
-        ? 'bg-rose-100 text-rose-800 border-rose-200/0' 
-        : 'bg-teal-100 text-teal-800 border-teal-200/0';
+        ? 'bg-rose-100 text-rose-800 border-rose-200' 
+        : 'bg-teal-100 text-teal-800 border-teal-200';
 
     return (
         <div className={`px-4 py-2 rounded-full border text-sm flex items-center space-x-2 ${colorClasses}`}>
@@ -52,7 +53,7 @@ export const PatientSummary: React.FC<PatientSummaryProps> = ({ data }) => {
         <DataBlock label="Stage (TNM)" value={data.stage} />
       </div>
 
-      <div className="bg-white border border-[var(--border-color)] rounded-3xl p-6 sm:p-8">
+      <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-10">
             <div>
                 <h3 className="text-2xl font-bold text-[var(--text-color)] mb-6">Biomarkers</h3>

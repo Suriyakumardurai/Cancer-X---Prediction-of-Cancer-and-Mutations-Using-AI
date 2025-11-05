@@ -12,18 +12,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       :root {
-        --bg-color: hsl(220, 16%, 96%); /* #f5f7fa - Cool Gray 50 */
-        --surface-color: #ffffff;
-        --text-color: hsl(215, 28%, 17%); /* #212936 - Cool Gray 800 */
-        --text-muted-color: hsl(217, 16%, 45%); /* #64748b - Cool Gray 500 */
-        --accent-color: #0d9488; /* Teal 600 */
-        --accent-color-dark: #134e4a; /* Teal 900 */
-        --accent-color-light: #f0fdfa; /* Teal 50 */
-        --border-color: hsl(215, 20%, 90%); /* #e2e8f0 - Cool Gray 200 */
-        --focus-ring-color: #14b8a6; /* Teal 500 */
-        --scrollbar-track-color: hsl(220, 16%, 93%); /* #edf0f3 */
-        --scrollbar-thumb-color: hsl(215, 20%, 82%); /* #cdd5e0 */
-        --scrollbar-thumb-hover-color: hsl(217, 16%, 65%); /* #94a3b8 */
+        --bg-color: #f8fafc; /* slate-50 */
+        --surface-color-rgb: 255, 255, 255; /* white */
+        --text-color: #1e293b; /* slate-800 */
+        --text-muted-color: #64748b; /* slate-500 */
+        --accent-color: #0d9488;
+        --accent-color-dark: #134e4a;
+        --accent-color-light: #f0fdfa; /* teal-50 */
+        --border-color-rgb: 226, 232, 240; /* slate-200 */
+        --focus-ring-color: #14b8a6;
+        --scrollbar-track-color: hsl(220, 16%, 93%);
+        --scrollbar-thumb-color: hsl(215, 20%, 82%);
+        --scrollbar-thumb-hover-color: hsl(217, 16%, 65%);
       }
       body {
         font-family: 'Inter', sans-serif;
@@ -31,6 +31,7 @@
         color: var(--text-color);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        background-attachment: fixed;
       }
       .light-scrollbar::-webkit-scrollbar {
         width: 8px;
@@ -48,10 +49,10 @@
         background: var(--scrollbar-thumb-hover-color);
       }
       .section-card {
-        background-color: var(--surface-color);
-        border: 1px solid var(--border-color);
+        background-color: rgb(var(--surface-color-rgb));
+        border: 1px solid rgb(var(--border-color-rgb));
         border-radius: 1.5rem; /* 24px */
-        box-shadow: 0 8px 16px -4px rgb(20 20 40 / 0.08);
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
       }
       .prose { color: var(--text-color); }
       *:focus-visible {
@@ -69,7 +70,7 @@
           margin-top: 2em;
           margin-bottom: 1em;
           padding-bottom: 0.5em;
-          border-bottom: 1px solid var(--border-color);
+          border-bottom: 1px solid rgba(var(--border-color-rgb), 1);
           line-height: 1.3;
           letter-spacing: -0.02em;
       }
@@ -98,20 +99,20 @@
           font-size: 14px;
       }
       .prose-custom th, .prose-custom td {
-          border: 1px solid var(--border-color);
+          border: 1px solid rgba(var(--border-color-rgb), 1);
           padding: 0.75em 1em;
           text-align: left;
       }
       .prose-custom th {
-          background-color: hsl(220, 16%, 98%);
+          background-color: #f8fafc; /* slate-50 */
           font-weight: 600;
       }
       .prose-custom tr:nth-child(even) {
-          background-color: hsl(220, 16%, 99%);
+          background-color: transparent;
       }
       .table-container {
           overflow-x: auto;
-          border: 1px solid var(--border-color);
+          border: 1px solid rgba(var(--border-color-rgb), 1);
           border-radius: 12px;
       }
     </style>

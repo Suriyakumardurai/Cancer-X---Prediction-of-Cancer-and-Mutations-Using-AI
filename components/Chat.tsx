@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
 import { renderMarkdown } from '../utils/markdownUtils';
@@ -36,7 +37,7 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage, isLoading }
     };
 
     return (
-        <div className="flex flex-col flex-grow min-h-0 bg-slate-50">
+        <div className="flex flex-col flex-grow min-h-0 bg-white">
             <div className="flex-grow p-4 overflow-y-auto light-scrollbar">
                 <div className="space-y-6">
                     {messages.length === 0 && (
@@ -47,14 +48,14 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage, isLoading }
                     )}
                     {messages.map((msg, index) => (
                         <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[90%] px-5 py-3.5 rounded-3xl ${msg.role === 'user' ? 'bg-teal-600 text-white rounded-br-xl' : 'bg-white text-[var(--text-color)] rounded-bl-xl border border-[var(--border-color)]'}`}>
+                            <div className={`max-w-[90%] px-5 py-3.5 rounded-3xl ${msg.role === 'user' ? 'bg-teal-600 text-white rounded-br-xl' : 'bg-slate-100 text-[var(--text-color)] rounded-bl-xl border border-slate-200'}`}>
                                 <div className="prose-custom prose-sm max-w-none text-inherit" dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}></div>
                             </div>
                         </div>
                     ))}
                     {isLoading && (
                         <div className="flex justify-start">
-                            <div className="px-4 py-3 rounded-3xl bg-white rounded-bl-xl border border-[var(--border-color)]">
+                            <div className="px-4 py-3 rounded-3xl bg-slate-100 rounded-bl-xl border border-slate-200">
                                 <div className="flex items-center space-x-2">
                                     <span className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-pulse delay-75"></span>
                                     <span className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-pulse delay-150"></span>
@@ -66,7 +67,7 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage, isLoading }
                     <div ref={messagesEndRef} />
                 </div>
             </div>
-            <div className="p-4 border-t border-[var(--border-color)] bg-white flex-shrink-0">
+            <div className="p-4 border-t border-slate-200 bg-white flex-shrink-0">
                 <div className="relative flex items-center">
                     <textarea
                         ref={inputRef}

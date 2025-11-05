@@ -42,7 +42,7 @@ const XIcon: React.FC<{className?: string}> = ({className}) => (
 export const CaseIntake: React.FC<CaseIntakeProps> = ({ nodes, activeFileId, onFileSelect, onDrop, onDeleteNode, synthesisStatus }) => {
   return (
     <>
-      <div className="p-4 border-b border-[var(--border-color)] flex-shrink-0">
+      <div className="p-4 border-b border-slate-200 flex-shrink-0">
         <h3 className="text-lg font-semibold text-[var(--text-color)]">Case Files</h3>
       </div>
       <div className="p-4 flex-shrink-0">

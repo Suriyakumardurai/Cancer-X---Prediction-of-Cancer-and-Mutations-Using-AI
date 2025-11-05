@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import type { ImageAnalysis } from '../types';
 import { renderMarkdown } from '../utils/markdownUtils';
@@ -64,7 +65,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, analysis }) 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow h-full min-h-0">
-        <div ref={containerRef} className="lg:col-span-2 relative w-full h-full bg-slate-100 rounded-3xl overflow-hidden border border-[var(--border-color)] flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
+        <div ref={containerRef} className="lg:col-span-2 relative w-full h-full bg-slate-100 rounded-3xl overflow-hidden border border-slate-200 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
           <img
             ref={imgRef}
             src={imageUrl}
@@ -111,7 +112,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, analysis }) 
           )}
         </div>
         
-        <div className="lg:col-span-1 bg-white border border-[var(--border-color)] rounded-3xl p-6 flex flex-col">
+        <div className="lg:col-span-1 section-card p-6 flex flex-col">
             <h3 className="text-2xl font-bold text-[var(--text-color)] mb-6 flex-shrink-0">Analysis Details</h3>
             <div className="flex-grow space-y-8 overflow-y-auto light-scrollbar pr-2">
                 {analysis?.laypersonsSummary && (
@@ -129,7 +130,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, analysis }) 
                     <div className="prose-custom max-w-none !text-base mt-2" dangerouslySetInnerHTML={{ __html: renderMarkdown(analysis?.findingsSummary || 'No summary available.') }} />
                 </div>
             </div>
-            <div className="mt-6 flex-shrink-0 border-t border-[var(--border-color)] pt-6">
+            <div className="mt-6 flex-shrink-0 border-t border-slate-200 pt-6">
                 <label htmlFor="toggle-overlay" className="flex items-center justify-between cursor-pointer">
                     <span className="text-base font-medium text-[var(--text-color)]">AI Overlay</span>
                     <div className="relative">

@@ -10,7 +10,7 @@ interface ReportViewProps {
 
 const ReportSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="mb-10">
-        <h3 className="text-2xl font-bold text-[var(--text-color)] mb-4 pb-3 border-b border-[var(--border-color)]">{title}</h3>
+        <h3 className="text-2xl font-bold text-[var(--text-color)] mb-4 pb-3 border-b border-slate-200">{title}</h3>
         {children}
     </div>
 );

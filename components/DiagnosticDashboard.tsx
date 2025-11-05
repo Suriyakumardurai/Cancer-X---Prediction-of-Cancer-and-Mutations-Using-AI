@@ -39,7 +39,7 @@ const ResizableHandle: React.FC<{ onMouseDown: (event: React.MouseEvent) => void
         role="separator"
         aria-orientation="vertical"
     >
-        <div className="w-0.5 h-full bg-[var(--border-color)] group-hover:bg-[var(--accent-color)] mx-auto transition-colors duration-300"></div>
+        <div className="w-0.5 h-full bg-slate-200 group-hover:bg-teal-400 mx-auto transition-colors duration-300"></div>
     </div>
 );
 
@@ -215,9 +215,9 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
             {isChatVisible && (
                  <div
                     style={getPanelStyle(rightWidthPercent)}
-                    className={`section-card flex-col min-h-0 ${mobileView === 'chat' ? 'absolute inset-0 z-20 flex bg-[var(--surface-color)]' : 'hidden md:flex'}`}
+                    className={`section-card flex-col min-h-0 ${mobileView === 'chat' ? 'absolute inset-0 z-20 flex bg-white/95 backdrop-blur-xl' : 'hidden md:flex'}`}
                 >
-                    <div className="p-4 border-b border-[var(--border-color)] flex-shrink-0 flex items-center justify-between">
+                    <div className="p-4 border-b border-slate-200 flex-shrink-0 flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-[var(--text-color)] flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 mr-2 text-teal-600" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"/></svg>
                             AI Assistant
