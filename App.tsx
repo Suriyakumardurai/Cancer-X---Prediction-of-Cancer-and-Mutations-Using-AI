@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { DiagnosticDashboard } from './components/DiagnosticDashboard';
@@ -253,26 +254,32 @@ const App: React.FC = () => {
   
   const handleDeleteCase = (idToDelete: string) => {
     if (!currentUser) return;
-    
-    // 1. Calculate the new cases array based on the current 'cases' state.
-    const newCasesForUser = cases.filter(c => c.id !== idToDelete);
 
-    // 2. Update the local 'cases' state for immediate UI feedback.
-    setCases(newCasesForUser);
+    // Forcefully update the state using a functional update to guarantee atomicity and prevent race conditions.
+    setAppData(prevAppData => {
+        // 1. Get the previous state's cases for the current user.
+        const userCases = prevAppData.cases[currentUser.id] || [];
+        
+        // 2. Create the new list by filtering out the deleted case.
+        const newCasesForUser = userCases.filter(c => c.id !== idToDelete);
 
-    // 3. Update the master 'appData' source of truth and persist to localStorage.
-    updateAppData(currentData => {
-        // We use the full currentData from storage but overwrite the cases for the current user.
-        return {
-            ...currentData,
+        // 3. Construct the complete new state object.
+        const newAppData = {
+            ...prevAppData,
             cases: {
-                ...currentData.cases,
+                ...prevAppData.cases,
                 [currentUser.id]: newCasesForUser
             }
         };
+
+        // 4. As a side effect, immediately persist this new state to localStorage.
+        saveAppData(newAppData);
+        
+        // 5. Return the new state to React for re-rendering.
+        return newAppData;
     });
 
-    // 4. Reset view if the currently active case was deleted.
+    // If the currently viewed case was deleted, switch back to the hub.
     if (activeCaseId === idToDelete) {
         setActiveCaseId(null);
         setView('hub');
