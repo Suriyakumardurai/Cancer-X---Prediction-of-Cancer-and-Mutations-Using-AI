@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { FileUpload } from './FileUpload';
-import type { NodeData } from '../App';
+import type { NodeData } from '../types';
 
 interface CaseIntakeProps {
   nodes: NodeData[];

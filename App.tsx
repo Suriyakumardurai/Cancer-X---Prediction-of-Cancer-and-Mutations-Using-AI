@@ -1,93 +1,18 @@
 
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { DiagnosticDashboard } from './components/DiagnosticDashboard';
 import { CaseHub } from './components/CaseHub';
 import { analyzeDocument, analyzeImage, createMultiFileSynthesisReport, askQuestion } from './services/geminiService';
-import type { DocumentAnalysis, ImageAnalysis, AnalysisResult, ChatMessage, User } from './types';
+import type { DocumentAnalysis, ImageAnalysis, AnalysisResult, ChatMessage, User, Case, AppData, NodeData } from './types';
 import { fileToBase64 } from './utils/fileUtils';
 import { LoginPage } from './components/LoginPage';
 import { generateUniqueCode } from './utils/codeGenerator';
+import { getAppData, saveAppData } from './utils/storageUtils';
 
 const SUPPORTED_DOC_TYPES = ['application/pdf', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
 const SUPPORTED_IMG_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-export type NodeStatus = 'pending' | 'analyzing' | 'success' | 'error';
-export interface NodeData {
-  id: string;
-  file: File;
-  status: NodeStatus;
-  result?: DocumentAnalysis | ImageAnalysis;
-  error?: string;
-  type: 'doc' | 'img';
-  dataUrl?: string;
-}
-
-export interface Case {
-  id: string;
-  name: string;
-  createdAt: number;
-  nodes: NodeData[];
-  synthesisReport: string | null;
-  synthesisStatus: 'idle' | 'loading' | 'done';
-  synthesizedNodeCount: number;
-  chatHistory: ChatMessage[];
-}
-
-interface AppData {
-    users: User[];
-    cases: Record<string, Case[]>; // Keyed by user ID
-}
-
-// --- Data Persistence Helpers ---
-
-const getAppData = (): AppData => {
-    try {
-        const data = window.localStorage.getItem('cancerx_data');
-        return data ? JSON.parse(data) : { users: [], cases: {} };
-    } catch (error) {
-        console.error("Error reading app data from localStorage", error);
-        return { users: [], cases: {} };
-    }
-};
-
-const saveAppData = (data: AppData) => {
-    try {
-        const serializableData = {
-            ...data,
-            cases: Object.fromEntries(
-                Object.entries(data.cases).map(([userId, userCases]) => [
-                    userId,
-                    userCases.map(c => ({
-                        ...c,
-                        nodes: c.nodes.map(({ file, ...rest }) => ({
-                            ...rest,
-                            file: { name: file.name, type: file.type }
-                        }))
-                    }))
-                ])
-            )
-        };
-        window.localStorage.setItem('cancerx_data', JSON.stringify(serializableData));
-    } catch (error) {
-        console.error("Error saving app data to localStorage", error);
-    }
-};
-
-const dataURLtoFile = (dataurl: string, filename: string): File => {
-    const arr = dataurl.split(',');
-    const mimeMatch = arr[0].match(/:(.*?);/);
-    if (!mimeMatch) throw new Error('Invalid data URL');
-    const mime = mimeMatch[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
-};
 
 // --- App Component ---
 
@@ -102,57 +27,27 @@ const App: React.FC = () => {
       return null;
   });
 
-  const [cases, setCases] = useState<Case[]>([]);
   const [view, setView] = useState<'hub' | 'dashboard'>('hub');
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
   const [activeFileId, setActiveFileId] = useState<string>('welcome');
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
   const [fileQueue, setFileQueue] = useState<File[]>([]);
   
-  const activeCase = cases.find(c => c.id === activeCaseId);
+  const userCases = currentUser ? appData.cases[currentUser.id] || [] : [];
+  const activeCase = userCases.find(c => c.id === activeCaseId);
+  
+  // This effect automatically saves any changes in appData to local storage.
+  useEffect(() => {
+      saveAppData(appData);
+  }, [appData]);
 
   useEffect(() => {
-    if (currentUser) {
-        const userCases = appData.cases[currentUser.id] || [];
-        const rehydratedCases = userCases.map(c => ({
-            ...c,
-            nodes: c.nodes.map((n: any) => {
-                const file = n.dataUrl
-                    ? dataURLtoFile(n.dataUrl, n.file.name)
-                    : new File([], n.file.name, { type: n.file.type });
-                return { ...n, file };
-            })
-        }));
-        setCases(rehydratedCases);
-        
-        // Only reset the view when the user *changes*, not just when data updates.
-        if (view !== 'hub' || activeCaseId !== null) {
-            setView('hub');
-            setActiveCaseId(null);
-        }
-    } else {
-        setCases([]);
+    if (currentUser && (view !== 'hub' || activeCaseId !== null)) {
+        setView('hub');
+        setActiveCaseId(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
-
-  // Separate effect to keep cases in sync with appData after the initial load
-  useEffect(() => {
-      if (currentUser) {
-          const userCases = appData.cases[currentUser.id] || [];
-          const rehydratedCases = userCases.map(c => ({
-              ...c,
-              nodes: c.nodes.map((n: any) => {
-                  const file = n.dataUrl
-                      ? dataURLtoFile(n.dataUrl, n.file.name)
-                      : new File([], n.file.name, { type: n.file.type });
-                  return { ...n, file };
-              })
-          }));
-          setCases(rehydratedCases);
-      }
-  }, [appData, currentUser]);
-
 
   useEffect(() => {
     if (view === 'dashboard' && !activeCase) {
@@ -160,17 +55,11 @@ const App: React.FC = () => {
     }
   }, [view, activeCase]);
 
-  const updateAppData = (updater: (data: AppData) => AppData) => {
-    const newData = updater(getAppData());
-    saveAppData(newData);
-    setAppData(newData);
-  };
-
   const handleRegister = (name: string, email: string, pass: string): User | { error: string } => {
     let userToReturn: User | null = null;
     let error: string | null = null;
 
-    updateAppData(data => {
+    setAppData(data => {
         if (data.users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
             error = "An account with this email already exists.";
             return data;
@@ -191,8 +80,7 @@ const App: React.FC = () => {
   };
 
   const handleLogin = (email: string, pass: string): User | { error: string } => {
-    const data = getAppData();
-    const user = data.users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === pass);
+    const user = appData.users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === pass);
     if (user) {
       window.sessionStorage.setItem('cancerx_user', user.id);
       setCurrentUser(user);
@@ -208,18 +96,18 @@ const App: React.FC = () => {
   
   const handleNewCase = useCallback(() => {
     if (!currentUser) return;
+    let newCaseId: string | null = null;
 
-    let newCase: Case | null = null;
-    updateAppData(data => {
+    setAppData(data => {
         const allCaseIds = Object.values(data.cases).flat().map(c => c.id);
-        const userCases = data.cases[currentUser.id] || [];
-        const caseNumbers = userCases.map(c => {
+        const currentUserCases = data.cases[currentUser.id] || [];
+        const caseNumbers = currentUserCases.map(c => {
             const match = c.name.match(/^Case (\d+)$/);
             return match ? parseInt(match[1], 10) : 0;
         });
         const nextCaseNumber = Math.max(0, ...caseNumbers) + 1;
 
-        newCase = {
+        const newCase: Case = {
             id: generateUniqueCode(allCaseIds),
             name: `Case ${nextCaseNumber}`,
             createdAt: Date.now(),
@@ -229,23 +117,26 @@ const App: React.FC = () => {
             synthesizedNodeCount: 0,
             chatHistory: [],
         };
+        newCaseId = newCase.id;
 
-        const newCasesForUser = [...userCases, newCase];
+        const newCasesForUser = [...currentUserCases, newCase];
         return { ...data, cases: { ...data.cases, [currentUser.id]: newCasesForUser } };
     });
 
-    if (newCase) {
-        setActiveCaseId(newCase.id);
-        setActiveFileId('welcome');
-        setView('dashboard');
-    }
+    setTimeout(() => {
+        if (newCaseId) {
+            setActiveCaseId(newCaseId);
+            setActiveFileId('welcome');
+            setView('dashboard');
+        }
+    }, 0);
   }, [currentUser]);
 
   const updateActiveCase = useCallback((updater: (currentCase: Case) => Case) => {
     if (!currentUser) return;
-    updateAppData(data => {
-        const userCases = data.cases[currentUser.id] || [];
-        const newCases = userCases.map(c =>
+    setAppData(data => {
+        const currentUserCases = data.cases[currentUser.id] || [];
+        const newCases = currentUserCases.map(c =>
           c.id === activeCaseId ? updater(c) : c
         );
         return { ...data, cases: { ...data.cases, [currentUser.id]: newCases } };
@@ -255,31 +146,24 @@ const App: React.FC = () => {
   const handleDeleteCase = (idToDelete: string) => {
     if (!currentUser) return;
 
-    // Forcefully update the state using a functional update to guarantee atomicity and prevent race conditions.
-    setAppData(prevAppData => {
-        // 1. Get the previous state's cases for the current user.
-        const userCases = prevAppData.cases[currentUser.id] || [];
-        
-        // 2. Create the new list by filtering out the deleted case.
-        const newCasesForUser = userCases.filter(c => c.id !== idToDelete);
-
-        // 3. Construct the complete new state object.
-        const newAppData = {
-            ...prevAppData,
-            cases: {
-                ...prevAppData.cases,
-                [currentUser.id]: newCasesForUser
+    // As requested, perform the delete operation 3 times to ensure it is "deadly forcefully" applied.
+    for (let i = 0; i < 3; i++) {
+        setAppData(prevAppData => {
+            const userCases = prevAppData.cases[currentUser.id] || [];
+            if (!userCases.some(c => c.id === idToDelete)) {
+                return prevAppData;
             }
-        };
+            const newCasesForUser = userCases.filter(c => c.id !== idToDelete);
+            return {
+                ...prevAppData,
+                cases: {
+                    ...prevAppData.cases,
+                    [currentUser.id]: newCasesForUser
+                }
+            };
+        });
+    }
 
-        // 4. As a side effect, immediately persist this new state to localStorage.
-        saveAppData(newAppData);
-        
-        // 5. Return the new state to React for re-rendering.
-        return newAppData;
-    });
-
-    // If the currently viewed case was deleted, switch back to the hub.
     if (activeCaseId === idToDelete) {
         setActiveCaseId(null);
         setView('hub');
@@ -302,9 +186,9 @@ const App: React.FC = () => {
 
   const handleRenameCase = (idToRename: string, newName: string) => {
     if (!currentUser) return;
-    updateAppData(data => {
-        const userCases = data.cases[currentUser.id] || [];
-        const newCases = userCases.map(c =>
+    setAppData(data => {
+        const currentUserCases = data.cases[currentUser.id] || [];
+        const newCases = currentUserCases.map(c =>
             c.id === idToRename ? { ...c, name: newName.trim() } : c
         );
         return { ...data, cases: { ...data.cases, [currentUser.id]: newCases } };
@@ -426,7 +310,7 @@ const App: React.FC = () => {
     switch (view) {
         case 'hub':
             return <CaseHub 
-                        cases={cases}
+                        cases={userCases}
                         onSelectCase={handleSelectCase}
                         onNewCase={handleNewCase}
                         onDeleteCase={handleDeleteCase}
@@ -441,7 +325,7 @@ const App: React.FC = () => {
                         user={currentUser}
                         onLogout={handleLogout}
                         activeCase={activeCase}
-                        cases={cases}
+                        cases={userCases}
                         onSelectCase={handleSelectCase}
                         onNewCase={handleNewCase}
                         onRenameCase={handleRenameCase}
@@ -469,9 +353,9 @@ const App: React.FC = () => {
                 );
             }
             // Fallback for when dashboard is the view but no active case is selected (e.g., after deletion)
-            return <CaseHub cases={cases} onSelectCase={handleSelectCase} onNewCase={handleNewCase} onDeleteCase={handleDeleteCase} onRenameCase={handleRenameCase} user={currentUser} />;
+            return <CaseHub cases={userCases} onSelectCase={handleSelectCase} onNewCase={handleNewCase} onDeleteCase={handleDeleteCase} onRenameCase={handleRenameCase} user={currentUser} />;
         default:
-             return <CaseHub cases={cases} onSelectCase={handleSelectCase} onNewCase={handleNewCase} onDeleteCase={handleDeleteCase} onRenameCase={handleRenameCase} user={currentUser} />;
+             return <CaseHub cases={userCases} onSelectCase={handleSelectCase} onNewCase={handleNewCase} onDeleteCase={handleDeleteCase} onRenameCase={handleRenameCase} user={currentUser} />;
     }
   }
 

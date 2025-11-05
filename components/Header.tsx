@@ -1,7 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-// FIX: The 'User' type is exported from '../types', not '../App'.
-import type { Case } from '../App';
-import type { User } from '../types';
+import type { Case, User } from '../types';
 import { ProfilePopover } from './ProfilePopover';
 
 interface HeaderProps {

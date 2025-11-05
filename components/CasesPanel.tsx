@@ -1,5 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import type { Case } from '../App';
+// FIX: The 'Case' type is exported from '../types', not '../App'.
+import type { Case } from '../types';
 
 interface CasesPanelProps {
   cases: Case[];

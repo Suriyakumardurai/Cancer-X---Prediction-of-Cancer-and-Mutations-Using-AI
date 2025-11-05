@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import type { NodeData } from '../App';
-import type { ChatMessage, DocumentAnalysis, ImageAnalysis } from '../types';
+import type { NodeData, ChatMessage, DocumentAnalysis, ImageAnalysis } from '../types';
 import { CaseIntake } from './CaseIntake';
 import { PatientSummary } from './PatientSummary';
 import { ImageViewer } from './ImageViewer';
@@ -69,7 +69,6 @@ const ViewerError: React.FC<{ node?: NodeData }> = ({ node }) => (
 export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) => {
     const { nodes, activeFileId, onFileSelect, onFileDrop, onDeleteNode, synthesisReport, synthesisStatus, chatHistory, isChatLoading, onSendMessage } = props;
 
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [mobileView, setMobileView] = useState<'list' | 'viewer' | 'chat'>('list');
     
     const [isChatVisible, setIsChatVisible] = useState(true);
@@ -124,21 +123,6 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
     }, [handleMouseMove, handleMouseUp]);
 
     const toggleChat = () => setIsChatVisible(prev => !prev);
-
-
-    useEffect(() => {
-        let objectUrl: string | null = null;
-        if (activeFile?.type === 'img' && activeFile.file) {
-            objectUrl = URL.createObjectURL(activeFile.file);
-            setImageUrl(objectUrl);
-        }
-        return () => {
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-                setImageUrl(null);
-            }
-        };
-    }, [activeFile]);
     
     useEffect(() => {
         if (nodes.length === 0) {
@@ -165,7 +149,7 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
         }
         if (activeFile?.status === 'success') {
             if (activeFile.type === 'doc') return <PatientSummary data={activeFile.result as DocumentAnalysis} />;
-            if (activeFile.type === 'img' && imageUrl) return <ImageViewer imageUrl={imageUrl} analysis={activeFile.result as ImageAnalysis} />;
+            if (activeFile.type === 'img' && activeFile.dataUrl) return <ImageViewer imageUrl={activeFile.dataUrl} analysis={activeFile.result as ImageAnalysis} />;
         }
         if (activeFile?.status === 'error') return <ViewerError node={activeFile} />;
         if (activeFile?.status === 'analyzing') {

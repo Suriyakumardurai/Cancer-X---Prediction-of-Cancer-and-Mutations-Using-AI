@@ -1,9 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { PatientSummary } from './PatientSummary';
 import { ImageViewer } from './ImageViewer';
 import { ReportView } from './ReportView';
-import { NodeData } from '../App';
-import { DocumentAnalysis, ImageAnalysis } from '../types';
+// FIX: The 'NodeData' type is exported from '../types', not '../App'. Also, consolidated type imports.
+import type { NodeData, DocumentAnalysis, ImageAnalysis } from '../types';
 
 interface DetailViewerProps {
     node?: NodeData;
