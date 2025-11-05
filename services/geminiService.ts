@@ -73,7 +73,7 @@ export const analyzeDocument = async (base64Report: string, mimeType: string): P
   const textPart = { text: `Your task is to act as a world-class medical data extraction system with expertise in oncology. Your accuracy is paramount. 1. **VALIDATE THE DOCUMENT:** First, carefully examine the provided document file. Perform OCR if necessary. Determine if it is a medical document, specifically an oncology or pathology report. 2. **RESPOND BASED ON VALIDITY:** If it is NOT a valid report, set \`isReportValid\` to \`false\`, provide a reason, and populate all other fields with empty values. If it IS a valid report, set \`isReportValid\` to \`true\` and accurately extract all required information. **Crucially, if the report's conclusion is benign, normal, or shows no evidence of malignancy, ensure this is clearly stated as the primary entry in the \`keyFindings\` array.**` };
 
   const response = await ai.models.generateContent({
-    model: 'gemini-flash-latest',
+    model: 'gemini-2.5-flash',
     contents: { parts: [filePart, textPart] },
     config: { responseMimeType: 'application/json', responseSchema: documentAnalysisSchema },
   });

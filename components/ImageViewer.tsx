@@ -57,13 +57,13 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, analysis }) 
   
   return (
     <div className="flex flex-col h-full p-2">
-      <div className="flex-shrink-0 mb-6">
-         <p className="text-sm font-medium text-teal-600 mb-1">Scan Analysis</p>
-         <h2 className="text-2xl md:text-3xl font-bold text-stone-800">{`Displaying findings for: ${analysis?.fileName}`}</h2>
+      <div className="flex-shrink-0 mb-8">
+         <p className="text-base font-semibold text-teal-600 mb-2">Scan Analysis</p>
+         <h2 className="text-4xl md:text-5xl font-extrabold text-[var(--text-color)] tracking-tighter">{`Displaying findings for: ${analysis?.fileName}`}</h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow h-full min-h-0">
-        <div ref={containerRef} className="lg:col-span-2 relative w-full h-full bg-stone-100 rounded-lg overflow-hidden border border-stone-200 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
+        <div ref={containerRef} className="lg:col-span-2 relative w-full h-full bg-slate-100 rounded-3xl overflow-hidden border border-[var(--border-color)] flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
           <img
             ref={imgRef}
             src={imageUrl}
@@ -91,14 +91,15 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, analysis }) 
                       y={y}
                       width={width}
                       height={height}
-                      className="fill-teal-500/20 stroke-teal-400"
-                      strokeWidth="2"
+                      className="fill-teal-400/20 stroke-teal-500"
+                      strokeWidth="3"
+                      rx="4"
                     />
                      <text
-                      x={x + 5}
-                      y={y + 18}
-                      className="fill-white text-[10px] sm:text-[12px] font-semibold"
-                      style={{paintOrder: "stroke", stroke: "#000", strokeWidth: "2px", strokeLinejoin: "round"}}
+                      x={x + 6}
+                      y={y + 22}
+                      className="fill-white text-base sm:text-lg font-bold"
+                      style={{paintOrder: "stroke", stroke: "rgba(0,0,0,0.6)", strokeWidth: "4px", strokeLinejoin: "round"}}
                     >
                       {`${box.label}: ${probabilityPercent}%`}
                     </text>
@@ -109,21 +110,21 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, analysis }) 
           )}
         </div>
         
-        <div className="lg:col-span-1 bg-white border border-stone-200 rounded-xl p-6 flex flex-col">
-            <h3 className="text-lg font-semibold text-stone-700 mb-4 flex-shrink-0">Analysis Details</h3>
-            <div className="flex-grow space-y-5 overflow-y-auto light-scrollbar pr-2">
+        <div className="lg:col-span-1 bg-white border border-[var(--border-color)] rounded-3xl p-6 flex flex-col">
+            <h3 className="text-2xl font-bold text-[var(--text-color)] mb-6 flex-shrink-0">Analysis Details</h3>
+            <div className="flex-grow space-y-6 overflow-y-auto light-scrollbar pr-2">
                 <div>
-                    <h4 className="text-xs font-bold text-stone-500 uppercase tracking-wider">Scan Description</h4>
-                    <p className="text-sm text-stone-600 mt-1">{analysis?.imageDescription || 'N/A'}</p>
+                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Scan Description</h4>
+                    <p className="text-base text-slate-700 mt-2 leading-relaxed">{analysis?.imageDescription || 'N/A'}</p>
                 </div>
                 <div>
-                    <h4 className="text-xs font-bold text-stone-500 uppercase tracking-wider">Findings Summary</h4>
-                    <p className="text-sm text-stone-600 mt-1">{analysis?.findingsSummary || 'No summary available.'}</p>
+                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Findings Summary</h4>
+                    <p className="text-base text-slate-700 mt-2 leading-relaxed">{analysis?.findingsSummary || 'No summary available.'}</p>
                 </div>
             </div>
-            <div className="mt-6 flex-shrink-0 border-t border-teal-500/20 pt-4">
+            <div className="mt-6 flex-shrink-0 border-t border-[var(--border-color)] pt-6">
                 <label htmlFor="toggle-overlay" className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm font-medium text-stone-700">AI Overlay</span>
+                    <span className="text-base font-medium text-[var(--text-color)]">AI Overlay</span>
                     <div className="relative">
                     <input
                         type="checkbox"
@@ -132,7 +133,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, analysis }) 
                         checked={showOverlay}
                         onChange={() => setShowOverlay(!showOverlay)}
                     />
-                    <div className="block bg-stone-300 w-14 h-8 rounded-full peer-checked:bg-teal-600 transition"></div>
+                    <div className="block bg-slate-300 w-14 h-8 rounded-full peer-checked:bg-teal-600 transition"></div>
                     <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform peer-checked:translate-x-6"></div>
                     </div>
                 </label>

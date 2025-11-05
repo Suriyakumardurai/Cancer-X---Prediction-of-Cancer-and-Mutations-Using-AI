@@ -1,3 +1,4 @@
+
 export interface DocumentAnalysis {
   fileName?: string;
   isReportValid: boolean;
@@ -46,3 +47,10 @@ export interface FileAnalysisError {
 }
 
 export type AppState = 'idle' | 'loading_analysis' | 'loading_synthesis' | 'results' | 'error';
+
+export interface User {
+  id: string; // 6-character unique code
+  name: string;
+  email: string;
+  password?: string; // Stored in-memory for this demo, NEVER do this in production
+}
