@@ -4,7 +4,7 @@ import { Header } from './components/Header';
 import { DiagnosticDashboard } from './components/DiagnosticDashboard';
 import { CaseHub } from './components/CaseHub';
 import { analyzeDocument, analyzeImage, createMultiFileSynthesisReport, askQuestion } from './services/geminiService';
-import type { DocumentAnalysis, ImageAnalysis, AnalysisResult, ChatMessage, User, Case, AppData, NodeData } from './types';
+import type { DocumentAnalysis, ImageAnalysis, AnalysisResult, ChatMessage, User, Case, AppData, NodeData, SynthesisReportData } from './types';
 import { fileToBase64 } from './utils/fileUtils';
 import { LoginPage } from './components/LoginPage';
 import { generateUniqueCode } from './utils/codeGenerator';

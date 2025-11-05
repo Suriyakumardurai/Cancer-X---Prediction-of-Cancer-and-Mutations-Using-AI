@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import type { NodeData, ChatMessage, DocumentAnalysis, ImageAnalysis } from '../types';
+import type { NodeData, ChatMessage, DocumentAnalysis, ImageAnalysis, SynthesisReportData } from '../types';
 import { CaseIntake } from './CaseIntake';
 import { PatientSummary } from './PatientSummary';
 import { ImageViewer } from './ImageViewer';
@@ -13,7 +13,7 @@ interface DiagnosticDashboardProps {
   onFileSelect: (id: string) => void;
   onFileDrop: (files: File[]) => void;
   onDeleteNode: (id: string) => void;
-  synthesisReport: string | null;
+  synthesisReport: SynthesisReportData | null;
   synthesisStatus: 'idle' | 'loading' | 'done';
   chatHistory: ChatMessage[];
   isChatLoading: boolean;

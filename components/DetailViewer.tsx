@@ -1,13 +1,16 @@
 
+
 import React, { useEffect, useState } from 'react';
 import { PatientSummary } from './PatientSummary';
 import { ImageViewer } from './ImageViewer';
 import { ReportView } from './ReportView';
-import type { NodeData, DocumentAnalysis, ImageAnalysis } from '../types';
+// FIX: Add SynthesisReportData to the import from types.
+import type { NodeData, DocumentAnalysis, ImageAnalysis, SynthesisReportData } from '../types';
 
 interface DetailViewerProps {
     node?: NodeData;
-    synthesisReport: string | null;
+    // FIX: Changed type of synthesisReport from `string | null` to `SynthesisReportData | null`.
+    synthesisReport: SynthesisReportData | null;
     showSynthesis: boolean;
     onClose: () => void;
 }

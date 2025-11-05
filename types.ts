@@ -35,7 +35,7 @@ export interface ImageAnalysis {
 export interface AnalysisResult {
   documentAnalyses: DocumentAnalysis[];
   imageAnalyses: ImageAnalysis[];
-  synthesisReport?: string;
+  synthesisReport?: SynthesisReportData;
   imageUrls: { [fileName: string]: string };
 }
 
@@ -58,6 +58,15 @@ export interface User {
   password?: string; // Stored in-memory for this demo, NEVER do this in production
 }
 
+// --- Report Data Structure ---
+export interface SynthesisReportData {
+  sourceDocuments: string[];
+  integratedClinicalSummary: string;
+  correlatedFindings: string; // This will contain the Markdown table
+  keyBiomarkers: string;
+  simplifiedSummaryForPatient: string;
+}
+
 
 // --- Core Data Structures ---
 
@@ -78,7 +87,7 @@ export interface Case {
   name: string;
   createdAt: number;
   nodes: NodeData[];
-  synthesisReport: string | null;
+  synthesisReport: SynthesisReportData | null;
   synthesisStatus: 'idle' | 'loading' | 'done';
   synthesizedNodeCount: number;
   chatHistory: ChatMessage[];

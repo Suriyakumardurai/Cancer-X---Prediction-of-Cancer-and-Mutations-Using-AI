@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import type { DocumentAnalysis, ImageAnalysis, AnalysisResult, ChatMessage } from '../types';
+import type { DocumentAnalysis, ImageAnalysis, AnalysisResult, ChatMessage, SynthesisReportData } from '../types';
 
 if (!process.env.API_KEY) {
   throw new Error("API_KEY environment variable not set");
@@ -70,6 +70,34 @@ const imageAnalysisSchema = {
   required: ["isScanValid", "validityReasoning", "imageDescription", "findingsSummary", "laypersonsSummary", "regionsOfInterest"],
 };
 
+const synthesisReportSchema = {
+    type: Type.OBJECT,
+    properties: {
+        sourceDocuments: {
+            type: Type.ARRAY,
+            description: "A list of the filenames of all source documents and scans used for this synthesis.",
+            items: { type: Type.STRING },
+        },
+        integratedClinicalSummary: {
+            type: Type.STRING,
+            description: "A consolidated summary of the overall clinical picture, integrating findings from all sources.",
+        },
+        correlatedFindings: {
+            type: Type.STRING,
+            description: "A Markdown-formatted table that correlates and compares specific findings across all documents. Must include a header separator. Example: '| Finding | Location | Characteristics |\\n|---|---|---|\\n| Nodule | Left Lung | 2cm, spiculated |'",
+        },
+        keyBiomarkers: {
+            type: Type.STRING,
+            description: "A summary paragraph explaining the significance of any identified biomarkers in the clinical context.",
+        },
+        simplifiedSummaryForPatient: {
+            type: Type.STRING,
+            description: "The overall results explained in simple, non-technical language that a patient can easily understand. Must be clear and reassuring if findings are benign.",
+        },
+    },
+    required: ["sourceDocuments", "integratedClinicalSummary", "correlatedFindings", "keyBiomarkers", "simplifiedSummaryForPatient"],
+};
+
 
 export const analyzeDocument = async (base64Report: string, mimeType: string): Promise<DocumentAnalysis> => {
   const filePart = { inlineData: { data: base64Report, mimeType } };
@@ -95,34 +123,62 @@ export const analyzeImage = async (base64Image: string, mimeType: string): Promi
   return JSON.parse(response.text.trim());
 };
 
-export const createMultiFileSynthesisReport = async (documentAnalyses: DocumentAnalysis[], imageAnalyses: ImageAnalysis[]): Promise<string> => {
+export const createMultiFileSynthesisReport = async (documentAnalyses: DocumentAnalysis[], imageAnalyses: ImageAnalysis[]): Promise<SynthesisReportData> => {
   if (documentAnalyses.length === 0 && imageAnalyses.length === 0) {
-    return "No valid data available to generate a synthesis report.";
+    // Return a default structure if there's no data
+    return {
+        sourceDocuments: [],
+        integratedClinicalSummary: "No valid data available to generate a synthesis report.",
+        correlatedFindings: "N/A",
+        keyBiomarkers: "N/A",
+        simplifiedSummaryForPatient: "No analysis was performed as no valid documents were provided.",
+    };
   }
   
-  const prompt = `You are an expert AI assistant for oncologists. Create a unified Patient Synthesis Report by correlating findings from the provided set of pathology reports and medical scans. Structure your response using Markdown for optimal clarity.
+  // Create concise summaries to reduce token load
+  const docSummaries = documentAnalyses.map(doc => `
+    - Report File: ${doc.fileName}
+    - Cancer Type: ${doc.cancerType || 'N/A'}
+    - Stage: ${doc.stage || 'N/A'}
+    - Key Findings: ${doc.keyFindings?.join(', ') || 'None'}
+    - Biomarkers: ${doc.biomarkers?.map(b => `${b.name} (${b.status})`).join(', ') || 'None'}
+  `).join('\n');
 
-**Pathology Report Analyses (${documentAnalyses.length} reports):**
-${documentAnalyses.map(doc => `--- Report: ${doc.fileName} ---\n${JSON.stringify(doc, null, 2)}`).join('\n\n')}
+  const imgSummaries = imageAnalyses.map(img => `
+    - Scan File: ${img.fileName}
+    - Description: ${img.imageDescription || 'N/A'}
+    - Findings Summary: ${img.findingsSummary || 'None'}
+  `).join('\n');
 
-**Medical Scan Analyses (${imageAnalyses.length} scans):**
-${imageAnalyses.map(img => `--- Scan: ${img.fileName} ---\n${JSON.stringify(img, null, 2)}`).join('\n\n')}
+  const prompt = `You are an expert AI assistant for oncologists. Create a unified Patient Synthesis Report by correlating findings from the provided summaries of pathology reports and medical scans. Respond with a JSON object that strictly adheres to the provided schema.
+
+**CONCISE SUMMARIES FOR ANALYSIS:**
+
+**Pathology Reports:**
+${docSummaries}
+
+**Medical Scans:**
+${imgSummaries}
 
 **Instructions:**
-1.  Start with a title: \`## Unified Synthesis Report\`.
-2.  Create a section \`### Source Documents\`. Provide a bulleted list of all source filenames.
-3.  Create a section \`### Integrated Clinical Summary\`. Consolidate patient details and summarize the overall clinical picture.
-4.  Create a section \`### Correlated Findings & Progression\`. Critically correlate findings across ALL documents. Use a **Markdown table** if useful to compare findings side-by-side. Explicitly state whether scans confirm findings in reports (e.g., "The nodule in \`scan.jpeg\` corresponds to the mass in \`report.pdf\`."). Note any progression or discrepancies.
-5.  Create a section \`### Key Biomarkers & Clinical Context\`. List and explain the significance of any identified biomarkers.
-6.  Finally, create a section \`### Simplified Summary for the Patient\`. Explain the overall results in simple, non-technical language that a patient can easily understand. Be clear and reassuring if the findings are benign.
+Based on the concise summaries above, generate a JSON object containing the following fields:
+1.  \`sourceDocuments\`: A list of all source filenames.
+2.  \`integratedClinicalSummary\`: Consolidate patient details and summarize the overall clinical picture.
+3.  \`correlatedFindings\`: A **string containing a Markdown table** that correlates findings. It MUST include a header and separator line (e.g., \`| Finding | Location | Characteristics |\\n|---|---|---|\`). Note any progression or discrepancies.
+4.  \`keyBiomarkers\`: A paragraph explaining the significance of any identified biomarkers.
+5.  \`simplifiedSummaryForPatient\`: Explain the overall results in simple, non-technical language. Be clear and reassuring if the findings are benign.
 `;
 
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,
-    config: { temperature: 0.1 }
+    config: { 
+        temperature: 0.1,
+        responseMimeType: 'application/json', 
+        responseSchema: synthesisReportSchema
+    }
   });
-  return response.text;
+  return JSON.parse(response.text.trim());
 };
 
 export const askQuestion = async (analysisContext: AnalysisResult, history: ChatMessage[], question: string): Promise<string> => {
@@ -132,7 +188,7 @@ export const askQuestion = async (analysisContext: AnalysisResult, history: Chat
       **Available Analysis Context:**
       ${analysisContext.documentAnalyses.length > 0 ? `**Pathology Report Summaries:**\n${analysisContext.documentAnalyses.map(doc => `File: ${doc.fileName}\n${JSON.stringify(doc, null, 2)}`).join('\n---\n')}` : ''}
       ${analysisContext.imageAnalyses.length > 0 ? `**Medical Scan Summaries:**\n${analysisContext.imageAnalyses.map(img => `File: ${img.fileName}\n${JSON.stringify(img, null, 2)}`).join('\n---\n')}` : ''}
-      ${analysisContext.synthesisReport ? `**Integrated Synthesis:**\n${analysisContext.synthesisReport}`: ''}
+      ${analysisContext.synthesisReport ? `**Integrated Synthesis:**\n${JSON.stringify(analysisContext.synthesisReport, null, 2)}`: ''}
 
       **Conversation History:**
       ${history.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n')}
