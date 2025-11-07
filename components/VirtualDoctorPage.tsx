@@ -77,7 +77,7 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
 
     try {
       // This is where you send the data to your Python server endpoint.
-      const response = await fetch('/api/initiate-call', {
+      const response = await fetch('http://localhost:8000/api/initiate-call', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
