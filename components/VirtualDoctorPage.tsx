@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import type { User, Case } from '../types';
+import type { User, Case, DocumentAnalysis } from '../types';
 import { ProfilePopover } from './ProfilePopover';
 
 interface VirtualDoctorPageProps {
@@ -9,6 +9,44 @@ interface VirtualDoctorPageProps {
   onLogout: () => void;
   onBack: () => void;
 }
+
+/**
+ * Creates a structured payload for the backend API call.
+ * This ensures a consistent data structure is always sent.
+ * @param user The current logged-in user.
+ * @param caseData The specific case selected for the call.
+ * @param phone The phone number to be called.
+ * @returns A structured object ready for JSON serialization.
+ */
+const createCallPayload = (user: User, caseData: Case, phone: string) => {
+    // Find the patient's name from the first available valid document analysis.
+    const patientNameDoc = caseData.nodes
+        .find(n => n.type === 'doc' && n.status === 'success' && (n.result as DocumentAnalysis)?.patientName) as { result: DocumentAnalysis } | undefined;
+    
+    // Collate all successful file analyses for the selected case.
+    const successfulAnalyses = caseData.nodes
+        .filter(n => n.status === 'success' && n.result)
+        .map(n => ({
+            fileName: n.file.name,
+            analysis: n.result,
+        }));
+
+    return {
+        // Top-level information about the caller
+        userName: user.name,
+        phoneNumber: phone,
+        
+        // Detailed, case-specific information, ensuring only the selected case's data is sent.
+        caseDetails: {
+            caseId: caseData.id,
+            patientName: patientNameDoc?.result.patientName || 'N/A',
+            fileCount: caseData.nodes.length,
+            fileAnalyses: successfulAnalyses,
+            synthesisReport: caseData.synthesisReport,
+        }
+    };
+};
+
 
 export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, cases, onLogout, onBack }) => {
   const [selectedCaseId, setSelectedCaseId] = useState<string>(cases[0]?.id || '');
@@ -23,9 +61,19 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
         setCallStatus('error');
         return;
     }
+    
+    const selectedCase = cases.find(c => c.id === selectedCaseId);
+    if (!selectedCase) {
+        setErrorMessage('Could not find the selected case data.');
+        setCallStatus('error');
+        return;
+    }
 
     setCallStatus('calling');
     setErrorMessage('');
+
+    // Construct the detailed payload using the dedicated function.
+    const payload = createCallPayload(user, selectedCase, phoneNumber);
 
     try {
       // This is where you send the data to your Python server endpoint.
@@ -34,11 +82,7 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: user.id,
-          caseId: selectedCaseId,
-          phoneNumber: phoneNumber,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

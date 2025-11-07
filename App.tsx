@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { DiagnosticDashboard } from './components/DiagnosticDashboard';
@@ -108,7 +109,8 @@ const App: React.FC = () => {
     let newCaseId: string | null = null;
 
     setAppData(data => {
-        const allCaseIds = Object.values(data.cases).flat().map(c => c.id);
+        // FIX: Explicitly type 'c' as 'Case' to resolve TypeScript inference issue.
+        const allCaseIds = Object.values(data.cases).flat().map((c: Case) => c.id);
         const currentUserCases = data.cases[currentUser.id] || [];
         const caseNumbers = currentUserCases.map(c => {
             const match = c.name.match(/^Case (\d+)$/);
