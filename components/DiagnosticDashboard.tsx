@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { NodeData, ChatMessage, DocumentAnalysis, ImageAnalysis, SynthesisReportData } from '../types';
 import { CaseIntake } from './CaseIntake';
@@ -44,20 +43,22 @@ const ResizableHandle: React.FC<{ onMouseDown: (event: React.MouseEvent) => void
 );
 
 const WelcomeScreen: React.FC = () => (
-    <div className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-8">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-24 h-24 sm:w-32 sm:h-32 mb-8 text-teal-500/10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
-        </svg>
+    <div className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-8 animate-fade-in">
+        <div className="w-32 h-32 mb-8 bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center rounded-3xl">
+           <svg xmlns="http://www.w3.org/2000/svg" className="w-20 h-20 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5v.214A2.25 2.25 0 0117.25 17h-10.5a2.25 2.25 0 01-2.25-2.25v-.214M19 14.5L14.25 10l-4.25-4.25" />
+            </svg>
+        </div>
         <h2 className="text-4xl sm:text-5xl font-extrabold text-[var(--text-color)] tracking-tighter">Analysis Environment</h2>
         <p className="mt-6 max-w-xl text-base sm:text-lg text-[var(--text-muted-color)] leading-relaxed">
             To begin, upload patient documents or medical scans using the panel on the left.
-            The AI will analyze each file, and once complete, generate a unified synthesis report.
+            The AI will analyze each file and generate a unified synthesis report.
         </p>
     </div>
 );
 
 const ViewerError: React.FC<{ node?: NodeData }> = ({ node }) => (
-    <div className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-8">
+    <div className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-8 animate-fade-in">
         <svg xmlns="http://www.w3.org/2000/svg" className="w-20 h-20 sm:w-24 sm:h-24 mb-6 text-rose-500/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -154,7 +155,7 @@ export const DiagnosticDashboard: React.FC<DiagnosticDashboardProps> = (props) =
         if (activeFile?.status === 'error') return <ViewerError node={activeFile} />;
         if (activeFile?.status === 'analyzing') {
              return (
-                <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                <div className="flex flex-col items-center justify-center h-full text-center p-8 animate-fade-in">
                      <svg className="w-24 h-24 animate-spin text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                      <p className="mt-8 text-xl text-[var(--text-color)] font-medium">Analyzing {activeFile.file.name}...</p>
                 </div>

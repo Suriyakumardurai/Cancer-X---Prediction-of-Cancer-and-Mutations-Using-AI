@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { User, Case, DocumentAnalysis } from '../types';
 import { ProfilePopover } from './ProfilePopover';
@@ -118,16 +117,26 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
                   </div>
               );
           case 'success':
-              return <p className="text-lg text-center text-teal-700 font-semibold">Call initiated successfully! You should receive a call shortly.</p>;
+              return (
+                <div className="flex items-center justify-center text-lg text-teal-700 font-semibold p-3 bg-teal-50 rounded-xl">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Call initiated! You should receive it shortly.
+                </div>
+              );
           case 'error':
-              return <p className="text-lg text-center text-rose-600">{errorMessage}</p>;
+              return (
+                <div className="flex items-center justify-center text-lg text-rose-700 font-semibold p-3 bg-rose-50 rounded-xl">
+                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                   {errorMessage}
+                </div>
+              );
           default:
               return null;
       }
   };
 
   return (
-    <div className="min-h-screen w-full font-sans flex flex-col p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen w-full font-sans flex flex-col p-4 sm:p-6 lg:p-8 animate-fade-in">
       <header className="w-full max-w-5xl mx-auto flex justify-between items-center mb-16">
         <div className="flex items-center gap-4">
           <button 
@@ -142,9 +151,9 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
         <ProfilePopover user={user} onLogout={onLogout} />
       </header>
       
-      <main className="flex-grow flex flex-col items-center justify-center">
+      <main className="flex-grow flex flex-col items-center">
         <div className="w-full max-w-lg">
-            <div className="section-card p-8 sm:p-10">
+            <div className="section-card p-8 sm:p-10 shadow-2xl shadow-slate-200/80">
                 <div className="text-center mb-8">
                     <h2 className="text-3xl font-bold text-[var(--text-color)]">Initiate a Consultation Call</h2>
                     <p className="text-base text-[var(--text-muted-color)] mt-3">Select a case and enter your phone number. The AI assistant will call you to discuss the findings.</p>
@@ -152,14 +161,14 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-[var(--text-muted-color)] mb-1" htmlFor="case-select">Select Patient Case</label>
+                        <label className="block text-sm font-medium text-[var(--text-muted-color)] mb-1.5" htmlFor="case-select">Select Patient Case</label>
                         <select
                             id="case-select"
                             value={selectedCaseId}
                             onChange={(e) => setSelectedCaseId(e.target.value)}
                             required
                             disabled={cases.length === 0}
-                            className="block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 disabled:bg-slate-200 disabled:cursor-not-allowed"
+                            className="block w-full px-4 py-3 bg-slate-100 border border-transparent rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-slate-200 disabled:cursor-not-allowed"
                         >
                             {cases.length > 0 ? (
                                 cases.map(c => <option key={c.id} value={c.id}>{c.name} (ID: {c.id})</option>)
@@ -170,7 +179,7 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-[var(--text-muted-color)] mb-1" htmlFor="phone-number">Your Phone Number</label>
+                        <label className="block text-sm font-medium text-[var(--text-muted-color)] mb-1.5" htmlFor="phone-number">Your Phone Number</label>
                         <input
                             id="phone-number"
                             type="tel"
@@ -178,7 +187,7 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
                             value={phoneNumber}
                             onChange={(e) => setPhoneNumber(e.target.value)}
                             required
-                            className="block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                            className="block w-full px-4 py-3 bg-slate-100 border border-transparent rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         />
                     </div>
 
@@ -186,7 +195,7 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
                         <button
                             type="submit"
                             disabled={callStatus === 'calling' || cases.length === 0}
-                            className="w-full flex items-center justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors"
+                            className="w-full flex items-center justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all transform hover:scale-105"
                         >
                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                             Initiate Call
@@ -194,7 +203,7 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
                     </div>
                 </form>
 
-                <div className="mt-8 min-h-[2.25rem] flex items-center justify-center">
+                <div className="mt-8 min-h-[3rem] flex items-center justify-center">
                     {getStatusMessage()}
                 </div>
             </div>

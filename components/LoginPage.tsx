@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { User } from '../types';
 
@@ -6,6 +5,24 @@ interface LoginPageProps {
   onLogin: (email: string, pass: string) => User | { error: string };
   onRegister: (name: string, email: string, pass: string) => void | { error: string };
 }
+
+const InputField: React.FC<{id: string, type: string, placeholder: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, icon: React.ReactNode, required?: boolean}> = 
+  ({ id, type, placeholder, value, onChange, icon, required }) => (
+    <div className="relative">
+      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+        {icon}
+      </span>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={onChange}
+        required={required}
+        placeholder={placeholder}
+        className="block w-full pl-12 pr-4 py-3 bg-slate-100 border border-transparent rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+      />
+    </div>
+);
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => {
   const [isLoginView, setIsLoginView] = useState(true);
@@ -41,16 +58,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => 
         if (result && 'error' in result) {
             setError(result.error);
         }
-        // On successful login or register, the App component will handle the view change.
         setIsLoading(false);
     }, 500);
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 font-sans flex">
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-teal-400 to-teal-600 flex-col items-center justify-center p-12 text-white text-center relative overflow-hidden">
-        <div className="absolute -top-20 -left-20 w-72 h-72 bg-white/10 rounded-full"></div>
-        <div className="absolute -bottom-24 -right-16 w-80 h-80 bg-white/10 rounded-full"></div>
+    <div className="min-h-screen w-full bg-slate-50 font-sans flex animate-fade-in">
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-teal-500 to-teal-700 flex-col items-center justify-center p-12 text-white text-center relative overflow-hidden">
+        <div className="absolute -top-20 -left-20 w-72 h-72 bg-white/10 rounded-full animate-pulse"></div>
+        <div className="absolute -bottom-24 -right-16 w-80 h-80 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '2s'}}></div>
         <div className="relative z-10">
           <h1 className="text-6xl font-extrabold tracking-tighter">CancerX</h1>
           <p className="text-xl mt-4 opacity-90 max-w-sm">AI-Powered Predictive Oncology Analysis. Unify data, accelerate diagnosis.</p>
@@ -64,17 +80,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => 
               <p className="text-lg text-[var(--text-muted-color)] mt-2">AI-Powered Predictive Oncology Analysis</p>
           </div>
           
-          <div className="bg-white p-8 rounded-3xl shadow-lg">
-            <div className="flex border-b border-[var(--border-color)] mb-6">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl shadow-slate-200/80">
+            <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
               <button 
                 onClick={() => { setIsLoginView(true); setError(''); }}
-                className={`flex-1 py-3 text-lg font-semibold transition-colors ${isLoginView ? 'text-teal-600 border-b-2 border-teal-600' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 py-2.5 text-base font-semibold transition-colors rounded-lg ${isLoginView ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 Login
               </button>
               <button 
                 onClick={() => { setIsLoginView(false); setError(''); }}
-                className={`flex-1 py-3 text-lg font-semibold transition-colors ${!isLoginView ? 'text-teal-600 border-b-2 border-teal-600' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 py-2.5 text-base font-semibold transition-colors rounded-lg ${!isLoginView ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 Register
               </button>
@@ -82,43 +98,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => 
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {!isLoginView && (
-                <div>
-                  <label className="block text-sm font-medium text-[var(--text-muted-color)]" htmlFor="name">Full Name</label>
-                  <input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    placeholder="e.g., Dr. Jane Smith"
-                    className="mt-1 block w-full px-4 py-3 bg-slate-100 border border-[var(--border-color)] rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                  />
-                </div>
+                <InputField id="name" type="text" placeholder="Dr. Jane Smith" value={name} onChange={e => setName(e.target.value)} required 
+                  icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>} 
+                />
               )}
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-muted-color)]" htmlFor="email">Email Address</label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="e.g., jane.smith@hospital.org"
-                  className="mt-1 block w-full px-4 py-3 bg-slate-100 border border-[var(--border-color)] rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-muted-color)]" htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="Enter your password"
-                  className="mt-1 block w-full px-4 py-3 bg-slate-100 border border-[var(--border-color)] rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                />
-              </div>
+              <InputField id="email" type="email" placeholder="jane.smith@hospital.org" value={email} onChange={e => setEmail(e.target.value)} required
+                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>}
+              />
+               <InputField id="password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required
+                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>}
+              />
               
               {error && <p className="text-sm text-red-600 text-center bg-red-50 p-3 rounded-lg">{error}</p>}
 
@@ -126,7 +115,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => 
                 <button 
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors"
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all transform hover:scale-105"
                 >
                   {isLoading ? (
                       <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

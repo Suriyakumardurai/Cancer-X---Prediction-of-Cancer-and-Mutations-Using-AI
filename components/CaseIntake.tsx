@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FileUpload } from './FileUpload';
 import type { NodeData } from '../types';
@@ -55,7 +54,7 @@ export const CaseIntake: React.FC<CaseIntakeProps> = ({ nodes, activeFileId, onF
                      <button
                         onClick={() => onFileSelect('synthesis')}
                         disabled={synthesisStatus !== 'done'}
-                        className={`w-full flex items-center space-x-4 text-left p-3 rounded-xl transition-colors duration-200 ${activeFileId === 'synthesis' ? 'bg-teal-100' : 'hover:bg-slate-100'} ${synthesisStatus !== 'done' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                        className={`w-full flex items-center space-x-4 text-left p-3 rounded-xl transition-all duration-200 border-2 ${activeFileId === 'synthesis' ? 'bg-teal-50 border-teal-500' : 'bg-slate-50 border-transparent hover:bg-slate-100 hover:border-slate-200'} ${synthesisStatus !== 'done' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                     >
                         <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
                             {synthesisStatus === 'loading' ? getStatusIcon('analyzing') : <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-teal-600" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"/></svg>}
@@ -81,7 +80,7 @@ export const CaseIntake: React.FC<CaseIntakeProps> = ({ nodes, activeFileId, onF
                   e.stopPropagation();
                   onDeleteNode(node.id);
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-400 hover:bg-rose-100 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-400 bg-white/50 hover:bg-rose-100 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-all"
                 aria-label={`Delete ${node.file.name}`}
               >
                 <XIcon className="w-4 h-4" />

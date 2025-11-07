@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { User } from '../types';
 import { ProfilePopover } from './ProfilePopover';
@@ -17,25 +16,28 @@ const SelectionCard: React.FC<{
 }> = ({ title, description, icon, onClick }) => (
   <div
     onClick={onClick}
-    className="section-card group transition-all duration-300 cursor-pointer p-8 text-center flex flex-col items-center hover:-translate-y-2"
+    className="section-card group relative transition-all duration-300 cursor-pointer p-8 text-center flex flex-col items-center hover:shadow-2xl hover:shadow-teal-100 hover:-translate-y-2"
   >
-    <div className="w-20 h-20 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110">
-      {icon}
-    </div>
-    <h3 className="text-2xl font-bold text-[var(--text-color)]">{title}</h3>
-    <p className="text-base text-[var(--text-muted-color)] mt-3 flex-grow">{description}</p>
-    <div className="mt-8 text-teal-600 font-semibold flex items-center group-hover:underline">
-      Select Experience
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-      </svg>
+    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-teal-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
+    <div className="relative z-10 flex flex-col items-center flex-grow">
+      <div className="w-20 h-20 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-110 group-hover:bg-white">
+        {icon}
+      </div>
+      <h3 className="text-2xl font-bold text-[var(--text-color)]">{title}</h3>
+      <p className="text-base text-[var(--text-muted-color)] mt-3 flex-grow">{description}</p>
+      <div className="mt-8 text-teal-600 font-semibold flex items-center group-hover:text-teal-700">
+        Select Experience
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </div>
     </div>
   </div>
 );
 
 export const AppSelectionPage: React.FC<AppSelectionPageProps> = ({ user, onLogout, onNavigate }) => {
   return (
-    <div className="min-h-screen w-full font-sans flex flex-col p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen w-full font-sans flex flex-col p-4 sm:p-6 lg:p-8 animate-fade-in">
        <header className="w-full max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-4">
              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tighter">CancerX</h1>
@@ -45,8 +47,8 @@ export const AppSelectionPage: React.FC<AppSelectionPageProps> = ({ user, onLogo
       
       <main className="flex-grow flex flex-col items-center justify-center">
         <div className="text-center mb-16">
-            <h2 className="text-5xl font-extrabold text-slate-900 tracking-tighter">Welcome, {user.name}</h2>
-            <p className="text-xl text-slate-500 mt-4 max-w-2xl">Choose how you would like to proceed with your oncology analysis.</p>
+            <h2 className="text-5xl font-extrabold text-slate-900 tracking-tighter">Welcome, {user.name.split(' ')[0]}</h2>
+            <p className="text-xl text-slate-500 mt-4 max-w-2xl">Choose how you would like to proceed with your analysis.</p>
         </div>
         <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <SelectionCard

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import type { Case, User } from '../types';
 
@@ -32,9 +31,9 @@ const CaseCard: React.FC<{
   const imgCount = caseData.nodes.filter(n => n.type === 'img').length;
 
   return (
-    <div className="section-card group transition-all duration-300 flex flex-col hover:-translate-y-1.5 relative overflow-hidden">
+    <div className="section-card group flex flex-col hover:shadow-xl hover:-translate-y-1 relative overflow-hidden transition-all duration-300">
       <div 
-        className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        className="absolute top-0 left-0 w-full h-1 bg-teal-500/0 group-hover:bg-teal-500/100 transition-all duration-300"
       ></div>
       <div onClick={onSelect} className="flex-grow p-6 cursor-pointer z-10">
         {isEditing ? (
@@ -87,7 +86,7 @@ export const CaseHub: React.FC<{
   onBack: () => void;
 }> = ({ cases, user, onSelectCase, onNewCase, onDeleteCase, onRenameCase, onBack }) => {
   return (
-    <div className="min-h-screen w-full font-sans antialiased">
+    <div className="min-h-screen w-full font-sans antialiased animate-fade-in">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-4 sm:py-6 lg:py-8">
             <button 
@@ -99,12 +98,12 @@ export const CaseHub: React.FC<{
             </button>
             <header className="mt-4 mb-12 flex justify-between items-center">
                 <div>
-                    <h1 className="text-5xl font-extrabold text-slate-900 tracking-tighter">Welcome, {user.name}</h1>
-                    <p className="text-xl text-slate-500 mt-3">Select a case to view or create a new one.</p>
+                    <h1 className="text-5xl font-extrabold text-slate-900 tracking-tighter">Welcome, {user.name.split(' ')[0]}</h1>
+                    <p className="text-xl text-slate-500 mt-3">Select a patient case to view or create a new one.</p>
                 </div>
                 <button
                 onClick={onNewCase}
-                className="flex items-center justify-center py-3 px-6 text-base font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-700 transition-colors transform hover:scale-105 shadow-md hover:shadow-lg"
+                className="flex items-center justify-center py-3 px-6 text-base font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-teal-200"
                 >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -131,10 +130,10 @@ export const CaseHub: React.FC<{
                 ))}
             </div>
         ) : (
-            <div className="text-center py-20 border-2 border-dashed border-slate-300 rounded-3xl">
+            <div className="text-center py-20 border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50/50">
                 <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-20 w-20 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
                 <h3 className="mt-4 text-2xl font-semibold text-slate-800">No cases found</h3>
-                <p className="mt-2 text-base text-slate-500">Get started by creating a new case.</p>
+                <p className="mt-2 text-base text-slate-500">Get started by creating your first case.</p>
             </div>
         )}
       </div>
