@@ -1,12 +1,14 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { User } from '../types';
 
 interface ProfilePopoverProps {
   user: User;
   onLogout: () => void;
+  onShowProfile: () => void;
 }
 
-export const ProfilePopover: React.FC<ProfilePopoverProps> = ({ user, onLogout }) => {
+export const ProfilePopover: React.FC<ProfilePopoverProps> = ({ user, onLogout, onShowProfile }) => {
   const [isOpen, setIsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +46,14 @@ export const ProfilePopover: React.FC<ProfilePopoverProps> = ({ user, onLogout }
             <p className="text-sm text-[var(--text-muted-color)] truncate">{user.email}</p>
             <p className="text-xs font-mono text-slate-400 mt-2">User ID: {user.id}</p>
           </div>
-          <div className="p-1 mt-1">
+          <div className="p-1 mt-1 space-y-1">
+             <button 
+                onClick={() => { onShowProfile(); setIsOpen(false); }}
+                className="w-full flex items-center gap-3 text-left px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors rounded-lg"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0012 11z" clipRule="evenodd" /></svg>
+                <span>Profile & Settings</span>
+            </button>
              <button 
                 onClick={onLogout} 
                 className="w-full flex items-center gap-3 text-left px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors rounded-lg"

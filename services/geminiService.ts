@@ -2,12 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { DocumentAnalysis, ImageAnalysis, AnalysisResult, ChatMessage, SynthesisReportData } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const documentAnalysisSchema = {
     type: Type.OBJECT,
     properties: {
@@ -100,6 +94,7 @@ const synthesisReportSchema = {
 
 
 export const analyzeDocument = async (base64Report: string, mimeType: string): Promise<DocumentAnalysis> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const filePart = { inlineData: { data: base64Report, mimeType } };
   const textPart = { text: `Your task is to act as a world-class medical data extraction system with expertise in oncology. Your accuracy is paramount. 1. **VALIDATE & EXTRACT:** First, carefully examine the provided document. Determine if it is a medical document (e.g., oncology, pathology report). If it IS a valid report, set \`isReportValid\` to \`true\` and accurately extract all required information. 2. **SUMMARIZE FOR PATIENT:** Create a 'laypersonsSummary' that explains the key findings in simple, easy-to-understand terms. Avoid jargon. If the report is benign or normal, state this clearly and reassuringly. 3. **HANDLE INVALID DOCS:** If it is NOT a valid report, set \`isReportValid\` to \`false\`, provide a reason, and populate all other fields with empty values.` };
 
@@ -112,6 +107,7 @@ export const analyzeDocument = async (base64Report: string, mimeType: string): P
 };
 
 export const analyzeImage = async (base64Image: string, mimeType: string): Promise<ImageAnalysis> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const imagePart = { inlineData: { data: base64Image, mimeType } };
   const textPart = { text: `You are a world-class AI medical imaging analyst. Your task is to analyze the provided image with the highest degree of accuracy. 1. **VALIDATE & ANALYZE:** Determine if it's a medically relevant image (e.g., CT, MRI). If valid, provide a technical description and summarize clinical findings. Identify key regions of interest with bounding boxes only if clinically relevant abnormalities are present. 2. **SUMMARIZE FOR PATIENT:** Create a 'laypersonsSummary' that explains what the scan shows and what the findings mean in simple, non-technical language. If the scan appears normal, state this clearly and reassuringly. 3. **HANDLE INVALID IMAGES:** If it's not a medically relevant image (e.g., a photo of a car), set \`isScanValid\` to \`false\`, explain why, and leave other fields empty.` };
 
@@ -124,6 +120,7 @@ export const analyzeImage = async (base64Image: string, mimeType: string): Promi
 };
 
 export const createMultiFileSynthesisReport = async (documentAnalyses: DocumentAnalysis[], imageAnalyses: ImageAnalysis[]): Promise<SynthesisReportData> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   if (documentAnalyses.length === 0 && imageAnalyses.length === 0) {
     // Return a default structure if there's no data
     return {
@@ -182,6 +179,7 @@ Based on the concise summaries above, generate a JSON object containing the foll
 };
 
 export const askQuestion = async (analysisContext: AnalysisResult, history: ChatMessage[], question: string): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const contextPrompt = `
       You are an expert oncology AI assistant. Your purpose is to answer questions based *only* on the provided analysis data from a patient's case file. Do not use external knowledge. Explain complex medical terms in a simple way if the user's question implies they are not a medical professional. Format your answer clearly using Markdown (lists, bolding) if it helps with readability.
       

@@ -1,5 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { Case, User } from '../types';
+import { ProfilePopover } from './ProfilePopover';
 
 const CaseCard: React.FC<{
   caseData: Case;
@@ -84,7 +86,9 @@ export const CaseHub: React.FC<{
   onDeleteCase: (id: string) => void;
   onRenameCase: (id: string, newName: string) => void;
   onBack: () => void;
-}> = ({ cases, user, onSelectCase, onNewCase, onDeleteCase, onRenameCase, onBack }) => {
+  onLogout: () => void;
+  onShowProfile: () => void;
+}> = ({ cases, user, onSelectCase, onNewCase, onDeleteCase, onRenameCase, onBack, onLogout, onShowProfile }) => {
   return (
     <div className="min-h-screen w-full font-sans antialiased animate-fade-in">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -101,15 +105,18 @@ export const CaseHub: React.FC<{
                     <h1 className="text-5xl font-extrabold text-slate-900 tracking-tighter">Welcome, {user.name.split(' ')[0]}</h1>
                     <p className="text-xl text-slate-500 mt-3">Select a patient case to view or create a new one.</p>
                 </div>
-                <button
-                onClick={onNewCase}
-                className="flex items-center justify-center py-3 px-6 text-base font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-teal-200"
-                >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                New Case
-                </button>
+                 <div className="flex items-center gap-4">
+                    <button
+                    onClick={onNewCase}
+                    className="flex items-center justify-center py-3 px-6 text-base font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-teal-200"
+                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    New Case
+                    </button>
+                    <ProfilePopover user={user} onLogout={onLogout} onShowProfile={onShowProfile} />
+                </div>
             </header>
         </div>
       

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { DiagnosticDashboard } from './components/DiagnosticDashboard';
@@ -12,6 +11,8 @@ import { generateUniqueCode } from './utils/codeGenerator';
 import { getAppData, saveAppData } from './utils/storageUtils';
 import { AppSelectionPage } from './components/AppSelectionPage';
 import { VirtualDoctorPage } from './components/VirtualDoctorPage';
+import { ApiKeySetup } from './components/ApiKeySetup';
+import { ProfilePage } from './components/ProfilePage';
 
 const SUPPORTED_DOC_TYPES = ['application/pdf', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
 const SUPPORTED_IMG_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -30,11 +31,12 @@ const App: React.FC = () => {
       return null;
   });
 
-  const [view, setView] = useState<'hub' | 'dashboard' | 'selection' | 'virtual_doctor'>('selection');
+  const [view, setView] = useState<'hub' | 'dashboard' | 'selection' | 'virtual_doctor' | 'profile'>('selection');
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
   const [activeFileId, setActiveFileId] = useState<string>('welcome');
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
   const [fileQueue, setFileQueue] = useState<File[]>([]);
+  const [apiKeyReady, setApiKeyReady] = useState<boolean>(false);
   
   const userCases = currentUser ? appData.cases[currentUser.id] || [] : [];
   const activeCase = userCases.find(c => c.id === activeCaseId);
@@ -45,20 +47,42 @@ const App: React.FC = () => {
   }, [appData]);
 
   useEffect(() => {
-    if (currentUser) {
-        // When a user logs in, always start at the selection screen.
-        // Don't reset if they are already navigating within the app.
-        if (view !== 'hub' && view !== 'dashboard' && view !== 'virtual_doctor') {
-            setView('selection');
+    const checkApiKey = async () => {
+        if (currentUser) {
+            // Check if a key has been selected in this session.
+            const hasKey = await window.aistudio.hasSelectedApiKey();
+            setApiKeyReady(hasKey);
+            if (hasKey && view !== 'hub' && view !== 'dashboard' && view !== 'virtual_doctor' && view !== 'profile') {
+                setView('selection');
+            }
+        } else {
+            // If no user, no key is ready.
+            setApiKeyReady(false);
         }
-    }
-  }, [currentUser, view]);
+    };
+    checkApiKey();
+  }, [currentUser]); // Run when user logs in/out
+
 
   useEffect(() => {
     if (view === 'dashboard' && !activeCase) {
       setView('hub');
     }
   }, [view, activeCase]);
+
+  // API call wrapper for error handling
+  const withApiKeyCheck = async <T,>(apiCall: () => Promise<T>): Promise<T> => {
+    try {
+      return await apiCall();
+    } catch (e) {
+      if (e instanceof Error && (e.message.includes("API key not valid") || e.message.includes("Requested entity was not found."))) {
+        console.error("API key error, prompting user to re-select.");
+        setApiKeyReady(false); // This will trigger the ApiKeySetup screen
+      }
+      throw e; // Re-throw the error to be handled by the original caller's catch block
+    }
+  };
+
 
   const handleRegister = (name: string, email: string, pass: string): void | { error: string } => {
     // Synchronously check for existing user to provide immediate feedback
@@ -92,7 +116,7 @@ const App: React.FC = () => {
     if (user) {
       window.sessionStorage.setItem('cancerx_user', user.id);
       setCurrentUser(user);
-      setView('selection'); // Go to selection screen on login
+      // Let the useEffect handle view change based on API key status
       return user;
     }
     return { error: 'Invalid email or password.' };
@@ -103,6 +127,22 @@ const App: React.FC = () => {
       setCurrentUser(null);
       // The lack of currentUser will automatically render LoginPage
   };
+
+  const handleUpdateUser = (updatedUser: User) => {
+    setCurrentUser(updatedUser);
+    setAppData(prevData => ({
+      ...prevData,
+      users: prevData.users.map(u => u.id === updatedUser.id ? updatedUser : u),
+    }));
+  };
+
+  const handleShowProfile = () => {
+    setView('profile');
+  };
+
+  const handleBackToApp = () => {
+    setView('selection'); // Always go back to a safe starting point.
+  }
   
   const handleNewCase = useCallback(() => {
     if (!currentUser) return;
@@ -156,28 +196,36 @@ const App: React.FC = () => {
   
   const handleDeleteCase = (idToDelete: string) => {
     if (!currentUser) return;
-
-    // As requested, perform the delete operation 3 times to ensure it is "deadly forcefully" applied.
-    for (let i = 0; i < 3; i++) {
-        setAppData(prevAppData => {
-            const userCases = prevAppData.cases[currentUser.id] || [];
-            if (!userCases.some(c => c.id === idToDelete)) {
-                return prevAppData;
-            }
-            const newCasesForUser = userCases.filter(c => c.id !== idToDelete);
-            return {
-                ...prevAppData,
-                cases: {
-                    ...prevAppData.cases,
-                    [currentUser.id]: newCasesForUser
-                }
-            };
-        });
-    }
-
+  
+    setAppData(prevAppData => {
+      // Destructure to get the cases for the current user and the rest of the cases.
+      const { [currentUser.id]: currentUserCases = [], ...otherUserCases } = prevAppData.cases;
+  
+      // Filter the current user's cases to remove the one to be deleted.
+      const updatedCurrentUserCases = currentUserCases.filter(c => c.id !== idToDelete);
+  
+      // If the length is the same, it means the case was not found, so we can return the original state.
+      if (updatedCurrentUserCases.length === currentUserCases.length) {
+        return prevAppData;
+      }
+  
+      // Reconstruct the entire 'cases' object with the updated list for the current user.
+      const newCasesObject = {
+        ...otherUserCases,
+        [currentUser.id]: updatedCurrentUserCases,
+      };
+  
+      // Return the new top-level state object.
+      return {
+        ...prevAppData,
+        cases: newCasesObject,
+      };
+    });
+  
+    // If the case being deleted was the active one, reset the view to the hub.
     if (activeCaseId === idToDelete) {
-        setActiveCaseId(null);
-        setView('hub');
+      setActiveCaseId(null);
+      setView('hub');
     }
   };
   
@@ -234,10 +282,10 @@ const App: React.FC = () => {
     try {
       let result;
       if (type === 'doc') {
-        result = await analyzeDocument(base64, mimeType);
+        result = await withApiKeyCheck(() => analyzeDocument(base64, mimeType));
         if (!result.isReportValid) throw new Error(result.validityReasoning);
       } else {
-        result = await analyzeImage(base64, mimeType);
+        result = await withApiKeyCheck(() => analyzeImage(base64, mimeType));
         if (!result.isScanValid) throw new Error(result.validityReasoning);
       }
       updateActiveCase(c => ({ ...c, nodes: c.nodes.map(n => n.id === id ? { ...n, status: 'success', result: {...result, fileName: file.name} } : n)}));
@@ -281,9 +329,14 @@ const App: React.FC = () => {
         updateActiveCase(c => ({...c, synthesisStatus: 'loading', synthesizedNodeCount: successfulNodes.length}));
         const successfulDocAnalyses = successfulNodes.filter(n => n.type === 'doc').map(n => n.result as DocumentAnalysis);
         const successfulImgAnalyses = successfulNodes.filter(n => n.type === 'img').map(n => n.result as ImageAnalysis);
-        const report = await createMultiFileSynthesisReport(successfulDocAnalyses, successfulImgAnalyses);
-        updateActiveCase(c => ({...c, synthesisReport: report, synthesisStatus: 'done'}));
-        setActiveFileId('synthesis');
+        try {
+            const report = await withApiKeyCheck(() => createMultiFileSynthesisReport(successfulDocAnalyses, successfulImgAnalyses));
+            updateActiveCase(c => ({...c, synthesisReport: report, synthesisStatus: 'done'}));
+            setActiveFileId('synthesis');
+        } catch(error) {
+            console.error("Synthesis failed:", error);
+            updateActiveCase(c => ({...c, synthesisStatus: 'idle', synthesizedNodeCount: 0 })); // Reset on failure
+        }
       };
       generateSynthesis();
     }
@@ -303,7 +356,7 @@ const App: React.FC = () => {
     updateActiveCase(c => ({...c, chatHistory: newHistory}));
     setIsChatLoading(true);
     try {
-        const response = await askQuestion(analysisResult, newHistory, message);
+        const response = await withApiKeyCheck(() => askQuestion(analysisResult, newHistory, message));
         updateActiveCase(c => ({...c, chatHistory: [...newHistory, { role: 'model', content: response }]}));
     } catch (err) {
         const errorContent = err instanceof Error ? err.message : "Sorry, I couldn't get a response.";
@@ -317,12 +370,18 @@ const App: React.FC = () => {
     return <LoginPage onLogin={handleLogin} onRegister={handleRegister} />;
   }
 
+  if (!apiKeyReady) {
+    return <ApiKeySetup user={currentUser} onLogout={handleLogout} onKeySelected={() => setApiKeyReady(true)} />;
+  }
+
   const renderContent = () => {
     switch (view) {
+        case 'profile':
+            return <ProfilePage user={currentUser} onLogout={handleLogout} onBack={handleBackToApp} onUpdateUser={handleUpdateUser} />;
         case 'selection':
-            return <AppSelectionPage user={currentUser} onLogout={handleLogout} onNavigate={setView} />;
+            return <AppSelectionPage user={currentUser} onLogout={handleLogout} onNavigate={setView} onShowProfile={handleShowProfile} />;
         case 'virtual_doctor':
-            return <VirtualDoctorPage user={currentUser} cases={userCases} onLogout={handleLogout} onBack={() => setView('selection')} />;
+            return <VirtualDoctorPage user={currentUser} cases={userCases} onLogout={handleLogout} onBack={() => setView('selection')} onShowProfile={handleShowProfile} />;
         case 'hub':
             return <CaseHub 
                         cases={userCases}
@@ -332,6 +391,8 @@ const App: React.FC = () => {
                         onRenameCase={handleRenameCase}
                         user={currentUser}
                         onBack={() => setView('selection')}
+                        onLogout={handleLogout}
+                        onShowProfile={handleShowProfile}
                     />;
         case 'dashboard':
             if (activeCase) {
@@ -347,6 +408,8 @@ const App: React.FC = () => {
                         onRenameCase={handleRenameCase}
                         onShowHub={handleShowHub}
                         onReset={handleReset}
+                        onDeleteCase={handleDeleteCase}
+                        onShowProfile={handleShowProfile}
                       />
                       <main className="flex-grow pt-[64px] flex min-h-0">
                           <div className="flex-grow min-w-0 h-full">
@@ -369,9 +432,9 @@ const App: React.FC = () => {
                 );
             }
             // Fallback for when dashboard is the view but no active case is selected (e.g., after deletion)
-            return <CaseHub cases={userCases} onSelectCase={handleSelectCase} onNewCase={handleNewCase} onDeleteCase={handleDeleteCase} onRenameCase={handleRenameCase} user={currentUser} onBack={() => setView('selection')} />;
+            return <CaseHub cases={userCases} onSelectCase={handleSelectCase} onNewCase={handleNewCase} onDeleteCase={handleDeleteCase} onRenameCase={handleRenameCase} user={currentUser} onBack={() => setView('selection')} onLogout={handleLogout} onShowProfile={handleShowProfile} />;
         default:
-             return <AppSelectionPage user={currentUser} onLogout={handleLogout} onNavigate={setView} />;
+             return <AppSelectionPage user={currentUser} onLogout={handleLogout} onNavigate={setView} onShowProfile={handleShowProfile} />;
     }
   }
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { Case, User } from '../types';
 import { ProfilePopover } from './ProfilePopover';
@@ -12,9 +13,11 @@ interface HeaderProps {
   onRenameCase: (id: string, newName: string) => void;
   onShowHub: () => void;
   onReset: () => void;
+  onDeleteCase: (id: string) => void;
+  onShowProfile: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user, onLogout, activeCase, cases, onSelectCase, onNewCase, onShowHub, onReset }) => {
+export const Header: React.FC<HeaderProps> = ({ user, onLogout, activeCase, cases, onSelectCase, onNewCase, onShowHub, onReset, onDeleteCase, onShowProfile }) => {
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const switcherRef = useRef<HTMLDivElement>(null);
 
@@ -68,15 +71,25 @@ export const Header: React.FC<HeaderProps> = ({ user, onLogout, activeCase, case
                 )}
             </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
             <button 
                 onClick={onReset} 
                 className="px-4 py-2 text-sm font-semibold text-rose-600 bg-rose-100 rounded-xl hover:bg-rose-200 transition-colors"
             >
                 Clear Case
             </button>
-            <div className="w-px h-8 bg-slate-200"></div>
-            <ProfilePopover user={user} onLogout={onLogout} />
+            <button 
+                onClick={() => {
+                    if (window.confirm(`Are you sure you want to permanently delete "${activeCase.name}"? This action cannot be undone.`)) {
+                        onDeleteCase(activeCase.id);
+                    }
+                }}
+                className="px-4 py-2 text-sm font-semibold text-rose-600 bg-transparent border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors"
+            >
+                Delete Case
+            </button>
+            <div className="w-px h-8 bg-slate-200 mx-2"></div>
+            <ProfilePopover user={user} onLogout={onLogout} onShowProfile={onShowProfile} />
         </div>
       </div>
     </header>

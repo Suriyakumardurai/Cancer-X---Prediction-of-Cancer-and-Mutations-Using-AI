@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { User, Case, DocumentAnalysis } from '../types';
 import { ProfilePopover } from './ProfilePopover';
@@ -7,6 +8,7 @@ interface VirtualDoctorPageProps {
   cases: Case[];
   onLogout: () => void;
   onBack: () => void;
+  onShowProfile: () => void;
 }
 
 /**
@@ -47,7 +49,7 @@ const createCallPayload = (user: User, caseData: Case, phone: string) => {
 };
 
 
-export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, cases, onLogout, onBack }) => {
+export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, cases, onLogout, onBack, onShowProfile }) => {
   const [selectedCaseId, setSelectedCaseId] = useState<string>(cases[0]?.id || '');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [callStatus, setCallStatus] = useState<'idle' | 'calling' | 'success' | 'error'>('idle');
@@ -148,7 +150,7 @@ export const VirtualDoctorPage: React.FC<VirtualDoctorPageProps> = ({ user, case
           </button>
            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tighter">Virtual AI Doctor</h1>
         </div>
-        <ProfilePopover user={user} onLogout={onLogout} />
+        <ProfilePopover user={user} onLogout={onLogout} onShowProfile={onShowProfile} />
       </header>
       
       <main className="flex-grow flex flex-col items-center">

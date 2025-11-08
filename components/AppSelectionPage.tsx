@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { User } from '../types';
 import { ProfilePopover } from './ProfilePopover';
@@ -6,6 +7,7 @@ interface AppSelectionPageProps {
   user: User;
   onLogout: () => void;
   onNavigate: (view: 'hub' | 'virtual_doctor') => void;
+  onShowProfile: () => void;
 }
 
 const SelectionCard: React.FC<{
@@ -35,14 +37,14 @@ const SelectionCard: React.FC<{
   </div>
 );
 
-export const AppSelectionPage: React.FC<AppSelectionPageProps> = ({ user, onLogout, onNavigate }) => {
+export const AppSelectionPage: React.FC<AppSelectionPageProps> = ({ user, onLogout, onNavigate, onShowProfile }) => {
   return (
     <div className="min-h-screen w-full font-sans flex flex-col p-4 sm:p-6 lg:p-8 animate-fade-in">
        <header className="w-full max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-4">
              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tighter">CancerX</h1>
         </div>
-        <ProfilePopover user={user} onLogout={onLogout} />
+        <ProfilePopover user={user} onLogout={onLogout} onShowProfile={onShowProfile} />
       </header>
       
       <main className="flex-grow flex flex-col items-center justify-center">
