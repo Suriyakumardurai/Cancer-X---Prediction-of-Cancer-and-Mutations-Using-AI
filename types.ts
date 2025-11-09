@@ -84,6 +84,7 @@ export interface NodeData {
 
 export interface Case {
   id: string;
+  userId: string;
   name: string;
   createdAt: number;
   nodes: NodeData[];
@@ -91,9 +92,10 @@ export interface Case {
   synthesisStatus: 'idle' | 'loading' | 'done';
   synthesizedNodeCount: number;
   chatHistory: ChatMessage[];
+  isVisible: boolean;
 }
 
 export interface AppData {
     users: User[];
-    cases: Record<string, Case[]>; // Keyed by user ID
+    cases: Case[];
 }

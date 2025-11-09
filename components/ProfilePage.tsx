@@ -1,25 +1,30 @@
-
 import React from 'react';
 import type { User } from '../types';
 import { ProfilePopover } from './ProfilePopover';
 
 interface ProfilePageProps {
   user: User;
+  apiKey: string | null;
   onLogout: () => void;
   onBack: () => void;
   onUpdateUser: (user: User) => void;
+  onUpdateApiKey: (key: string) => void;
+  onClearApiKey: () => void;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout, onBack, onUpdateUser }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ user, apiKey, onLogout, onBack, onUpdateUser, onUpdateApiKey, onClearApiKey }) => {
   const [keyUpdateStatus, setKeyUpdateStatus] = React.useState<'idle' | 'success'>('idle');
   const [isEditingName, setIsEditingName] = React.useState(false);
   const [name, setName] = React.useState(user.name);
+  const [newApiKey, setNewApiKey] = React.useState('');
 
-  const handleUpdateKey = async () => {
-    await window.aistudio.openSelectKey();
-    // Provide user feedback that the action was taken.
-    setKeyUpdateStatus('success');
-    setTimeout(() => setKeyUpdateStatus('idle'), 3000); // Reset after 3 seconds
+  const handleUpdateKey = () => {
+    if (newApiKey.trim()) {
+      onUpdateApiKey(newApiKey.trim());
+      setKeyUpdateStatus('success');
+      setNewApiKey('');
+      setTimeout(() => setKeyUpdateStatus('idle'), 3000); // Reset after 3 seconds
+    }
   };
   
   const handleSaveName = () => {
@@ -30,6 +35,19 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout, onBack
     }
     setIsEditingName(false);
   };
+
+  const handleClearKeyClick = () => {
+    if (window.confirm("Are you sure you want to clear your saved API key? You will be logged out and will need to enter a new one to use AI features.")) {
+      onClearApiKey();
+      onLogout(); // Forcing a clean state is safer
+    }
+  };
+  
+  const getMaskedApiKey = (key: string | null): string => {
+    if (!key) return "No key set";
+    if (key.length <= 8) return "••••••••";
+    return `${key.substring(0, 4)}••••••••••••••••${key.substring(key.length - 4)}`;
+  }
 
   return (
     <div className="min-h-screen w-full font-sans flex flex-col p-4 sm:p-6 lg:p-8 animate-fade-in">
@@ -94,19 +112,40 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout, onBack
           
           <div className="section-card p-8">
             <h2 className="text-2xl font-bold text-[var(--text-color)] border-b border-slate-200 pb-4 mb-6">API Key Management</h2>
-            <p className="text-base text-[var(--text-muted-color)] mb-6">
-              Your Google AI API key is used for all requests to the Gemini API. You can change the key used for your session at any time.
-              Please see the <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline font-medium">official billing documentation</a> for more details.
-            </p>
-            <div className="flex items-center gap-4">
+            <div className="space-y-4">
+                 <div>
+                    <label className="block text-sm font-medium text-[var(--text-muted-color)]">Current API Key</label>
+                    <p className="text-lg text-[var(--text-color)] mt-1 font-mono text-slate-600 bg-slate-100 p-3 rounded-xl">{getMaskedApiKey(apiKey)}</p>
+                </div>
+                 <div>
+                    <label htmlFor="api-key-update" className="block text-sm font-medium text-[var(--text-muted-color)]">Update API Key</label>
+                    <input
+                        id="api-key-update"
+                        type="password"
+                        value={newApiKey}
+                        onChange={(e) => setNewApiKey(e.target.value)}
+                        placeholder="Paste new API key here to update"
+                        className="mt-1 block w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                    />
+                </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 mt-6 pt-6 border-t border-slate-200">
               <button
                 onClick={handleUpdateKey}
-                className="inline-flex items-center justify-center py-2.5 px-6 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors"
+                disabled={!newApiKey.trim()}
+                className="w-full sm:w-auto inline-flex items-center justify-center py-2.5 px-6 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors"
               >
-                Change API Key
+                Save New Key
+              </button>
+              <button
+                onClick={handleClearKeyClick}
+                className="w-full sm:w-auto inline-flex items-center justify-center py-2.5 px-6 border border-slate-300 rounded-xl shadow-sm text-base font-semibold text-slate-700 bg-white hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors"
+              >
+                Clear Saved Key
               </button>
               {keyUpdateStatus === 'success' && (
-                <p className="text-sm text-green-600 animate-fade-in">API key selection updated successfully.</p>
+                <p className="text-sm text-green-600 animate-fade-in">API key updated successfully.</p>
               )}
             </div>
           </div>

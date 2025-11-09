@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { DiagnosticDashboard } from './components/DiagnosticDashboard';
@@ -8,7 +9,7 @@ import type { DocumentAnalysis, ImageAnalysis, AnalysisResult, ChatMessage, User
 import { fileToBase64 } from './utils/fileUtils';
 import { LoginPage } from './components/LoginPage';
 import { generateUniqueCode } from './utils/codeGenerator';
-import { getAppData, saveAppData } from './utils/storageUtils';
+import { getAppData, saveAppData, getApiKey, saveApiKey, removeApiKey } from './utils/storageUtils';
 import { AppSelectionPage } from './components/AppSelectionPage';
 import { VirtualDoctorPage } from './components/VirtualDoctorPage';
 import { ApiKeySetup } from './components/ApiKeySetup';
@@ -25,7 +26,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
       const userId = window.sessionStorage.getItem('cancerx_user');
       if (userId) {
-          const data = getAppData();
+          const data = getAppData(); // Use initial data load for this
           return data.users.find(u => u.id === userId) || null;
       }
       return null;
@@ -36,56 +37,90 @@ const App: React.FC = () => {
   const [activeFileId, setActiveFileId] = useState<string>('welcome');
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
   const [fileQueue, setFileQueue] = useState<File[]>([]);
-  const [apiKeyReady, setApiKeyReady] = useState<boolean>(false);
+  const [apiKey, setApiKey] = useState<string | null>(getApiKey);
   
-  const userCases = currentUser ? appData.cases[currentUser.id] || [] : [];
-  const activeCase = userCases.find(c => c.id === activeCaseId);
-  
-  // This effect automatically saves any changes in appData to local storage.
+  // Data persistence
   useEffect(() => {
-      saveAppData(appData);
+    saveAppData(appData);
   }, [appData]);
 
+  const userCases = currentUser ? appData.cases.filter(c => c.userId === currentUser.id && c.isVisible) : [];
+  const activeCase = activeCaseId && currentUser ? appData.cases.find(c => c.id === activeCaseId && c.userId === currentUser.id) : null;
+  
   useEffect(() => {
-    const checkApiKey = async () => {
-        if (currentUser) {
-            // Check if a key has been selected in this session.
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            setApiKeyReady(hasKey);
-            if (hasKey && view !== 'hub' && view !== 'dashboard' && view !== 'virtual_doctor' && view !== 'profile') {
-                setView('selection');
-            }
-        } else {
-            // If no user, no key is ready.
-            setApiKeyReady(false);
-        }
-    };
-    checkApiKey();
-  }, [currentUser]); // Run when user logs in/out
-
-
-  useEffect(() => {
-    if (view === 'dashboard' && !activeCase) {
-      setView('hub');
+    if (currentUser && apiKey && view !== 'hub' && view !== 'dashboard' && view !== 'virtual_doctor' && view !== 'profile') {
+        setView('selection');
     }
-  }, [view, activeCase]);
+  }, [currentUser, apiKey, view]);
+
+  // Effect to handle navigation when the active case is deleted/invalidated.
+  // This is a declarative approach: the UI "reacts" to the state of the data.
+  useEffect(() => {
+    // If the active case exists in state but its `isVisible` flag is false (i.e., it has been "soft-deleted"),
+    // then we must navigate the user away from the dashboard for that case.
+    if (activeCase && !activeCase.isVisible) {
+      setActiveCaseId(null);
+      setView('hub');
+      setActiveFileId('welcome');
+      setFileQueue([]);
+    }
+  }, [activeCase]);
 
   // API call wrapper for error handling
-  const withApiKeyCheck = async <T,>(apiCall: () => Promise<T>): Promise<T> => {
+  const withApiKeyCheck = async <T,>(apiCall: (apiKey: string) => Promise<T>): Promise<T> => {
+    if (!apiKey) {
+      console.error("Attempted to make API call without an API key.");
+      throw new Error("API Key is not set. Please configure it in your profile.");
+    }
     try {
-      return await apiCall();
+      return await apiCall(apiKey);
     } catch (e) {
-      if (e instanceof Error && (e.message.includes("API key not valid") || e.message.includes("Requested entity was not found."))) {
-        console.error("API key error, prompting user to re-select.");
-        setApiKeyReady(false); // This will trigger the ApiKeySetup screen
+      if (e instanceof Error && e.message.includes("API key not valid")) {
+        console.error("API key error, clearing key and prompting user.");
+        removeApiKey();
+        setApiKey(null); // This will trigger the ApiKeySetup screen
       }
       throw e; // Re-throw the error to be handled by the original caller's catch block
     }
   };
 
+  // --- Data Manipulation Callbacks ---
+  
+  const addUser = useCallback((newUser: User) => {
+    setAppData(prev => ({ ...prev, users: [...prev.users, newUser] }));
+  }, []);
+
+  const updateUser = useCallback((updatedUser: User) => {
+    setAppData(prev => ({ ...prev, users: prev.users.map(u => u.id === updatedUser.id ? updatedUser : u) }));
+  }, []);
+
+  const addCase = useCallback((newCase: Case) => {
+    setAppData(prev => ({ ...prev, cases: [...prev.cases, newCase] }));
+  }, []);
+  
+  const updateCase = useCallback((caseId: string, updater: (currentCase: Case) => Case) => {
+    setAppData(prev => ({ ...prev, cases: prev.cases.map(c => (c.id === caseId ? updater(c) : c)) }));
+  }, []);
+
+  const renameCase = useCallback((caseId: string, newName: string) => {
+    updateCase(caseId, c => ({ ...c, name: newName.trim() }));
+  }, [updateCase]);
+
+  const handleDeleteCase = useCallback((idToDelete: string) => {
+    // This function is now only responsible for updating the data state.
+    // The UI navigation is handled declaratively by a useEffect hook.
+    setAppData(prevAppData => ({
+      ...prevAppData,
+      cases: prevAppData.cases.map(c =>
+        c.id === idToDelete ? { ...c, isVisible: false } : c
+      ),
+    }));
+  }, []);
+
+
+  // --- Event Handlers ---
 
   const handleRegister = (name: string, email: string, pass: string): void | { error: string } => {
-    // Synchronously check for existing user to provide immediate feedback
     if (appData.users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
         return { error: "An account with this email already exists." };
     }
@@ -95,20 +130,13 @@ const App: React.FC = () => {
         id: generateUniqueCode(allUserIds), 
         name, 
         email, 
-        password: pass // Note: In a real app, hash this password!
+        password: pass
     };
     
-    // Update state with new user
-    setAppData(prevData => ({
-        ...prevData,
-        users: [...prevData.users, newUser],
-        cases: { ...prevData.cases, [newUser.id]: [] } // Initialize cases for new user
-    }));
+    addUser(newUser);
     
-    // Automatically log in the new user
     window.sessionStorage.setItem('cancerx_user', newUser.id);
     setCurrentUser(newUser);
-    // The useEffect listening for currentUser changes will handle setting the view.
   };
 
   const handleLogin = (email: string, pass: string): User | { error: string } => {
@@ -116,7 +144,6 @@ const App: React.FC = () => {
     if (user) {
       window.sessionStorage.setItem('cancerx_user', user.id);
       setCurrentUser(user);
-      // Let the useEffect handle view change based on API key status
       return user;
     }
     return { error: 'Invalid email or password.' };
@@ -125,15 +152,11 @@ const App: React.FC = () => {
   const handleLogout = () => {
       window.sessionStorage.removeItem('cancerx_user');
       setCurrentUser(null);
-      // The lack of currentUser will automatically render LoginPage
   };
 
   const handleUpdateUser = (updatedUser: User) => {
     setCurrentUser(updatedUser);
-    setAppData(prevData => ({
-      ...prevData,
-      users: prevData.users.map(u => u.id === updatedUser.id ? updatedUser : u),
-    }));
+    updateUser(updatedUser);
   };
 
   const handleShowProfile = () => {
@@ -141,93 +164,56 @@ const App: React.FC = () => {
   };
 
   const handleBackToApp = () => {
-    setView('selection'); // Always go back to a safe starting point.
+    setView('selection');
   }
+
+  const handleSetApiKey = (key: string) => {
+    saveApiKey(key);
+    setApiKey(key);
+  };
+
+  const handleClearApiKey = () => {
+    removeApiKey();
+    setApiKey(null);
+  };
   
   const handleNewCase = useCallback(() => {
     if (!currentUser) return;
-    let newCaseId: string | null = null;
 
-    setAppData(data => {
-        // FIX: Explicitly type 'c' as 'Case' to resolve TypeScript inference issue.
-        const allCaseIds = Object.values(data.cases).flat().map((c: Case) => c.id);
-        const currentUserCases = data.cases[currentUser.id] || [];
-        const caseNumbers = currentUserCases.map(c => {
-            const match = c.name.match(/^Case (\d+)$/);
-            return match ? parseInt(match[1], 10) : 0;
-        });
-        const nextCaseNumber = Math.max(0, ...caseNumbers) + 1;
-
-        const newCase: Case = {
-            id: generateUniqueCode(allCaseIds),
-            name: `Case ${nextCaseNumber}`,
-            createdAt: Date.now(),
-            nodes: [],
-            synthesisReport: null,
-            synthesisStatus: 'idle',
-            synthesizedNodeCount: 0,
-            chatHistory: [],
-        };
-        newCaseId = newCase.id;
-
-        const newCasesForUser = [...currentUserCases, newCase];
-        return { ...data, cases: { ...data.cases, [currentUser.id]: newCasesForUser } };
+    const allCaseIds = appData.cases.map(c => c.id);
+    const currentUserCases = appData.cases.filter(c => c.userId === currentUser.id);
+    const caseNumbers = currentUserCases.map(c => {
+        const match = c.name.match(/^Case (\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
     });
+    const nextCaseNumber = Math.max(0, ...caseNumbers) + 1;
+
+    const newCase: Case = {
+        id: generateUniqueCode(allCaseIds),
+        userId: currentUser.id,
+        name: `Case ${nextCaseNumber}`,
+        createdAt: Date.now(),
+        nodes: [],
+        synthesisReport: null,
+        synthesisStatus: 'idle',
+        synthesizedNodeCount: 0,
+        chatHistory: [],
+        isVisible: true,
+    };
+    
+    addCase(newCase);
 
     setTimeout(() => {
-        if (newCaseId) {
-            setActiveCaseId(newCaseId);
-            setActiveFileId('welcome');
-            setView('dashboard');
-        }
+        setActiveCaseId(newCase.id);
+        setActiveFileId('welcome');
+        setView('dashboard');
     }, 0);
-  }, [currentUser]);
+  }, [currentUser, appData.cases, addCase]);
 
   const updateActiveCase = useCallback((updater: (currentCase: Case) => Case) => {
-    if (!currentUser) return;
-    setAppData(data => {
-        const currentUserCases = data.cases[currentUser.id] || [];
-        const newCases = currentUserCases.map(c =>
-          c.id === activeCaseId ? updater(c) : c
-        );
-        return { ...data, cases: { ...data.cases, [currentUser.id]: newCases } };
-    });
-  }, [activeCaseId, currentUser]);
-  
-  const handleDeleteCase = (idToDelete: string) => {
-    if (!currentUser) return;
-  
-    setAppData(prevAppData => {
-      // Destructure to get the cases for the current user and the rest of the cases.
-      const { [currentUser.id]: currentUserCases = [], ...otherUserCases } = prevAppData.cases;
-  
-      // Filter the current user's cases to remove the one to be deleted.
-      const updatedCurrentUserCases = currentUserCases.filter(c => c.id !== idToDelete);
-  
-      // If the length is the same, it means the case was not found, so we can return the original state.
-      if (updatedCurrentUserCases.length === currentUserCases.length) {
-        return prevAppData;
-      }
-  
-      // Reconstruct the entire 'cases' object with the updated list for the current user.
-      const newCasesObject = {
-        ...otherUserCases,
-        [currentUser.id]: updatedCurrentUserCases,
-      };
-  
-      // Return the new top-level state object.
-      return {
-        ...prevAppData,
-        cases: newCasesObject,
-      };
-    });
-  
-    // If the case being deleted was the active one, reset the view to the hub.
-    if (activeCaseId === idToDelete) {
-      setActiveCaseId(null);
-      setView('hub');
-    }
-  };
+    if (!currentUser || !activeCaseId) return;
+    updateCase(activeCaseId, updater);
+  }, [activeCaseId, currentUser, updateCase]);
   
   const handleSelectCase = (id: string) => {
     setFileQueue([]);
@@ -236,22 +222,16 @@ const App: React.FC = () => {
     setView('dashboard');
   };
   
-  const handleShowHub = () => {
+  const handleShowHub = useCallback(() => {
     setFileQueue([]);
     setActiveCaseId(null);
     setActiveFileId('welcome');
     setView('hub');
-  };
-
+  }, []);
+  
   const handleRenameCase = (idToRename: string, newName: string) => {
     if (!currentUser) return;
-    setAppData(data => {
-        const currentUserCases = data.cases[currentUser.id] || [];
-        const newCases = currentUserCases.map(c =>
-            c.id === idToRename ? { ...c, name: newName.trim() } : c
-        );
-        return { ...data, cases: { ...data.cases, [currentUser.id]: newCases } };
-    });
+    renameCase(idToRename, newName);
   };
 
   const handleReset = () => {
@@ -282,10 +262,10 @@ const App: React.FC = () => {
     try {
       let result;
       if (type === 'doc') {
-        result = await withApiKeyCheck(() => analyzeDocument(base64, mimeType));
+        result = await withApiKeyCheck((key) => analyzeDocument(base64, mimeType, key));
         if (!result.isReportValid) throw new Error(result.validityReasoning);
       } else {
-        result = await withApiKeyCheck(() => analyzeImage(base64, mimeType));
+        result = await withApiKeyCheck((key) => analyzeImage(base64, mimeType, key));
         if (!result.isScanValid) throw new Error(result.validityReasoning);
       }
       updateActiveCase(c => ({ ...c, nodes: c.nodes.map(n => n.id === id ? { ...n, status: 'success', result: {...result, fileName: file.name} } : n)}));
@@ -293,7 +273,7 @@ const App: React.FC = () => {
       const reason = error instanceof Error ? error.message : 'Unknown error';
       updateActiveCase(c => ({ ...c, nodes: c.nodes.map(n => n.id === id ? { ...n, status: 'error', error: reason } : n)}));
     }
-  }, [activeCaseId, updateActiveCase]);
+  }, [activeCaseId, updateActiveCase, withApiKeyCheck]);
   
   useEffect(() => {
     if (activeCaseId && fileQueue.length > 0) {
@@ -330,7 +310,7 @@ const App: React.FC = () => {
         const successfulDocAnalyses = successfulNodes.filter(n => n.type === 'doc').map(n => n.result as DocumentAnalysis);
         const successfulImgAnalyses = successfulNodes.filter(n => n.type === 'img').map(n => n.result as ImageAnalysis);
         try {
-            const report = await withApiKeyCheck(() => createMultiFileSynthesisReport(successfulDocAnalyses, successfulImgAnalyses));
+            const report = await withApiKeyCheck((key) => createMultiFileSynthesisReport(successfulDocAnalyses, successfulImgAnalyses, key));
             updateActiveCase(c => ({...c, synthesisReport: report, synthesisStatus: 'done'}));
             setActiveFileId('synthesis');
         } catch(error) {
@@ -340,7 +320,7 @@ const App: React.FC = () => {
       };
       generateSynthesis();
     }
-  }, [activeCase, updateActiveCase]);
+  }, [activeCase, updateActiveCase, withApiKeyCheck]);
 
   const handleSendMessage = async (message: string) => {
     if (isChatLoading || !activeCase) return;
@@ -356,7 +336,7 @@ const App: React.FC = () => {
     updateActiveCase(c => ({...c, chatHistory: newHistory}));
     setIsChatLoading(true);
     try {
-        const response = await withApiKeyCheck(() => askQuestion(analysisResult, newHistory, message));
+        const response = await withApiKeyCheck((key) => askQuestion(analysisResult, newHistory, message, key));
         updateActiveCase(c => ({...c, chatHistory: [...newHistory, { role: 'model', content: response }]}));
     } catch (err) {
         const errorContent = err instanceof Error ? err.message : "Sorry, I couldn't get a response.";
@@ -370,14 +350,14 @@ const App: React.FC = () => {
     return <LoginPage onLogin={handleLogin} onRegister={handleRegister} />;
   }
 
-  if (!apiKeyReady) {
-    return <ApiKeySetup user={currentUser} onLogout={handleLogout} onKeySelected={() => setApiKeyReady(true)} />;
+  if (!apiKey) {
+    return <ApiKeySetup user={currentUser} onLogout={handleLogout} onSetApiKey={handleSetApiKey} />;
   }
 
   const renderContent = () => {
     switch (view) {
         case 'profile':
-            return <ProfilePage user={currentUser} onLogout={handleLogout} onBack={handleBackToApp} onUpdateUser={handleUpdateUser} />;
+            return <ProfilePage user={currentUser} apiKey={apiKey} onLogout={handleLogout} onBack={handleBackToApp} onUpdateUser={handleUpdateUser} onUpdateApiKey={handleSetApiKey} onClearApiKey={handleClearApiKey} />;
         case 'selection':
             return <AppSelectionPage user={currentUser} onLogout={handleLogout} onNavigate={setView} onShowProfile={handleShowProfile} />;
         case 'virtual_doctor':
