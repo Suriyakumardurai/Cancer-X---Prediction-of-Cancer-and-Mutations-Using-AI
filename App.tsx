@@ -11,7 +11,7 @@ import { LoginPage } from './components/LoginPage';
 import { generateUniqueCode } from './utils/codeGenerator';
 import { getAppData, saveAppData, getApiKey, saveApiKey, removeApiKey } from './utils/storageUtils';
 import { AppSelectionPage } from './components/AppSelectionPage';
-import { VirtualDoctorPage } from './components/VirtualDoctorPage';
+
 import { ApiKeySetup } from './components/ApiKeySetup';
 import { ProfilePage } from './components/ProfilePage';
 
@@ -32,7 +32,7 @@ const App: React.FC = () => {
       return null;
   });
 
-  const [view, setView] = useState<'hub' | 'dashboard' | 'selection' | 'virtual_doctor' | 'profile'>('selection');
+  const [view, setView] = useState<'hub' | 'dashboard' | 'selection' | 'profile'>('selection');
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
   const [activeFileId, setActiveFileId] = useState<string>('welcome');
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
@@ -48,7 +48,7 @@ const App: React.FC = () => {
   const activeCase = activeCaseId && currentUser ? appData.cases.find(c => c.id === activeCaseId && c.userId === currentUser.id) : null;
   
   useEffect(() => {
-    if (currentUser && apiKey && view !== 'hub' && view !== 'dashboard' && view !== 'virtual_doctor' && view !== 'profile') {
+    if (currentUser && apiKey && view !== 'hub' && view !== 'dashboard' && view !== 'profile') {
         setView('selection');
     }
   }, [currentUser, apiKey, view]);
@@ -360,8 +360,6 @@ const App: React.FC = () => {
             return <ProfilePage user={currentUser} apiKey={apiKey} onLogout={handleLogout} onBack={handleBackToApp} onUpdateUser={handleUpdateUser} onUpdateApiKey={handleSetApiKey} onClearApiKey={handleClearApiKey} />;
         case 'selection':
             return <AppSelectionPage user={currentUser} onLogout={handleLogout} onNavigate={setView} onShowProfile={handleShowProfile} />;
-        case 'virtual_doctor':
-            return <VirtualDoctorPage user={currentUser} cases={userCases} onLogout={handleLogout} onBack={() => setView('selection')} onShowProfile={handleShowProfile} />;
         case 'hub':
             return <CaseHub 
                         cases={userCases}

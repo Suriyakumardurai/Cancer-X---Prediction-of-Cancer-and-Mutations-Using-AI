@@ -98,7 +98,7 @@ export const analyzeDocument = async (base64Report: string, mimeType: string, ap
   const textPart = { text: `Your task is to act as a world-class medical data extraction system with expertise in oncology. Your accuracy is paramount. 1. **VALIDATE & EXTRACT:** First, carefully examine the provided document. Determine if it is a medical document (e.g., oncology, pathology report). If it IS a valid report, set \`isReportValid\` to \`true\` and accurately extract all required information. 2. **SUMMARIZE FOR PATIENT:** Create a 'laypersonsSummary' that explains the key findings in simple, easy-to-understand terms. Avoid jargon. If the report is benign or normal, state this clearly and reassuringly. 3. **HANDLE INVALID DOCS:** If it is NOT a valid report, set \`isReportValid\` to \`false\`, provide a reason, and populate all other fields with empty values.` };
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-flash-latest',
     contents: { parts: [filePart, textPart] },
     config: { responseMimeType: 'application/json', responseSchema: documentAnalysisSchema },
   });
@@ -111,7 +111,7 @@ export const analyzeImage = async (base64Image: string, mimeType: string, apiKey
   const textPart = { text: `You are a world-class AI medical imaging analyst. Your task is to analyze the provided image with the highest degree of accuracy. 1. **VALIDATE & ANALYZE:** Determine if it's a medically relevant image (e.g., CT, MRI). If valid, provide a technical description and summarize clinical findings. Identify key regions of interest with bounding boxes only if clinically relevant abnormalities are present. 2. **SUMMARIZE FOR PATIENT:** Create a 'laypersonsSummary' that explains what the scan shows and what the findings mean in simple, non-technical language. If the scan appears normal, state this clearly and reassuringly. 3. **HANDLE INVALID IMAGES:** If it's not a medically relevant image (e.g., a photo of a car), set \`isScanValid\` to \`false\`, explain why, and leave other fields empty.` };
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-flash-latest',
     contents: { parts: [imagePart, textPart] },
     config: { responseMimeType: 'application/json', responseSchema: imageAnalysisSchema }
   });
@@ -166,7 +166,7 @@ Based on the concise summaries above, generate a JSON object containing the foll
 `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-flash-latest',
     contents: prompt,
     config: { 
         temperature: 0.1,
@@ -197,7 +197,7 @@ export const askQuestion = async (analysisContext: AnalysisResult, history: Chat
     `;
     
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         contents: contextPrompt,
         config: {
             temperature: 0.2,

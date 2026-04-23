@@ -64,7 +64,9 @@ const parseTable = (lines: string[]): { tableHtml: string; linesConsumed: number
 export const renderMarkdown = (text: string | undefined): string => {
     if (!text) return '';
 
-    const lines = text.split('\n');
+    // Fix for literal '\n' strings returned by the AI
+    const normalizedText = text.replace(/\\n/g, '\n');
+    const lines = normalizedText.split('\n');
     let html = '';
     let inList = false;
 
